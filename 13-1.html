@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Font Awesome 字体图标</title>
+<link rel="stylesheet" href="cdn/fontawesome/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #f4f6fa; color: #333; padding: 40px 20px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 36px; }
+  .section { max-width: 960px; margin: 0 auto 40px; }
+  .section h2 { font-size: 18px; color: #555; margin-bottom: 16px; padding-left: 12px; border-left: 4px solid #4a7dff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+  .card {
+    background: #fff; border-radius: 10px; padding: 20px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); transition: transform .2s, box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.1); }
+  .card i { font-size: 28px; }
+  .card .label { font-size: 12px; color: #999; }
+  .solid i { color: #4a7dff; }
+  .regular i { color: #e67e22; }
+  .brands i { color: #9b59b6; }
+</style>
+</head>
+<body>
+  <h1>Font Awesome 图标库</h1>
+  <p class="subtitle">字体图标方式：通过 @font-face 加载 woff2 字体，用 CSS 类名渲染图标</p>
+
+  <div class="section">
+    <h2>Solid 实心图标 (fa-solid)</h2>
+    <div class="grid solid">
+      <div class="card"><i class="fa-solid fa-house"></i><span class="label">fa-house</span></div>
+      <div class="card"><i class="fa-solid fa-user"></i><span class="label">fa-user</span></div>
+      <div class="card"><i class="fa-solid fa-gear"></i><span class="label">fa-gear</span></div>
+      <div class="card"><i class="fa-solid fa-magnifying-glass"></i><span class="label">fa-magnifying-glass</span></div>
+      <div class="card"><i class="fa-solid fa-heart"></i><span class="label">fa-heart</span></div>
+      <div class="card"><i class="fa-solid fa-star"></i><span class="label">fa-star</span></div>
+      <div class="card"><i class="fa-solid fa-bell"></i><span class="label">fa-bell</span></div>
+      <div class="card"><i class="fa-solid fa-envelope"></i><span class="label">fa-envelope</span></div>
+      <div class="card"><i class="fa-solid fa-camera"></i><span class="label">fa-camera</span></div>
+      <div class="card"><i class="fa-solid fa-music"></i><span class="label">fa-music</span></div>
+      <div class="card"><i class="fa-solid fa-calendar-days"></i><span class="label">fa-calendar-days</span></div>
+      <div class="card"><i class="fa-solid fa-clock"></i><span class="label">fa-clock</span></div>
+      <div class="card"><i class="fa-solid fa-cloud"></i><span class="label">fa-cloud</span></div>
+      <div class="card"><i class="fa-solid fa-code"></i><span class="label">fa-code</span></div>
+      <div class="card"><i class="fa-solid fa-database"></i><span class="label">fa-database</span></div>
+      <div class="card"><i class="fa-solid fa-file"></i><span class="label">fa-file</span></div>
+      <div class="card"><i class="fa-solid fa-folder"></i><span class="label">fa-folder</span></div>
+      <div class="card"><i class="fa-solid fa-globe"></i><span class="label">fa-globe</span></div>
+      <div class="card"><i class="fa-solid fa-image"></i><span class="label">fa-image</span></div>
+      <div class="card"><i class="fa-solid fa-lock"></i><span class="label">fa-lock</span></div>
+      <div class="card"><i class="fa-solid fa-map"></i><span class="label">fa-map</span></div>
+      <div class="card"><i class="fa-solid fa-comments"></i><span class="label">fa-comments</span></div>
+      <div class="card"><i class="fa-solid fa-moon"></i><span class="label">fa-moon</span></div>
+      <div class="card"><i class="fa-solid fa-phone"></i><span class="label">fa-phone</span></div>
+      <div class="card"><i class="fa-solid fa-sun"></i><span class="label">fa-sun</span></div>
+      <div class="card"><i class="fa-solid fa-trash-can"></i><span class="label">fa-trash-can</span></div>
+      <div class="card"><i class="fa-solid fa-upload"></i><span class="label">fa-upload</span></div>
+      <div class="card"><i class="fa-solid fa-video"></i><span class="label">fa-video</span></div>
+      <div class="card"><i class="fa-solid fa-wifi"></i><span class="label">fa-wifi</span></div>
+      <div class="card"><i class="fa-solid fa-pen"></i><span class="label">fa-pen</span></div>
+      <div class="card"><i class="fa-solid fa-cart-shopping"></i><span class="label">fa-cart-shopping</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Regular 线性图标 (fa-regular)</h2>
+    <div class="grid regular">
+      <div class="card"><i class="fa-regular fa-user"></i><span class="label">fa-user</span></div>
+      <div class="card"><i class="fa-regular fa-heart"></i><span class="label">fa-heart</span></div>
+      <div class="card"><i class="fa-regular fa-star"></i><span class="label">fa-star</span></div>
+      <div class="card"><i class="fa-regular fa-bell"></i><span class="label">fa-bell</span></div>
+      <div class="card"><i class="fa-regular fa-envelope"></i><span class="label">fa-envelope</span></div>
+      <div class="card"><i class="fa-regular fa-calendar"></i><span class="label">fa-calendar</span></div>
+      <div class="card"><i class="fa-regular fa-clock"></i><span class="label">fa-clock</span></div>
+      <div class="card"><i class="fa-regular fa-comments"></i><span class="label">fa-comments</span></div>
+      <div class="card"><i class="fa-regular fa-file"></i><span class="label">fa-file</span></div>
+      <div class="card"><i class="fa-regular fa-folder"></i><span class="label">fa-folder</span></div>
+      <div class="card"><i class="fa-regular fa-image"></i><span class="label">fa-image</span></div>
+      <div class="card"><i class="fa-regular fa-moon"></i><span class="label">fa-moon</span></div>
+      <div class="card"><i class="fa-regular fa-sun"></i><span class="label">fa-sun</span></div>
+      <div class="card"><i class="fa-regular fa-trash-can"></i><span class="label">fa-trash-can</span></div>
+      <div class="card"><i class="fa-regular fa-map"></i><span class="label">fa-map</span></div>
+      <div class="card"><i class="fa-regular fa-pen-to-square"></i><span class="label">fa-pen-to-square</span></div>
+      <div class="card"><i class="fa-regular fa-square-check"></i><span class="label">fa-square-check</span></div>
+      <div class="card"><i class="fa-regular fa-circle-question"></i><span class="label">fa-circle-question</span></div>
+      <div class="card"><i class="fa-regular fa-face-smile"></i><span class="label">fa-face-smile</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Brands 品牌图标 (fa-brands)</h2>
+    <div class="grid brands">
+      <div class="card"><i class="fa-brands fa-github"></i><span class="label">fa-github</span></div>
+      <div class="card"><i class="fa-brands fa-twitter"></i><span class="label">fa-twitter</span></div>
+      <div class="card"><i class="fa-brands fa-facebook"></i><span class="label">fa-facebook</span></div>
+      <div class="card"><i class="fa-brands fa-google"></i><span class="label">fa-google</span></div>
+      <div class="card"><i class="fa-brands fa-apple"></i><span class="label">fa-apple</span></div>
+      <div class="card"><i class="fa-brands fa-microsoft"></i><span class="label">fa-microsoft</span></div>
+      <div class="card"><i class="fa-brands fa-android"></i><span class="label">fa-android</span></div>
+      <div class="card"><i class="fa-brands fa-chrome"></i><span class="label">fa-chrome</span></div>
+      <div class="card"><i class="fa-brands fa-react"></i><span class="label">fa-react</span></div>
+      <div class="card"><i class="fa-brands fa-vuejs"></i><span class="label">fa-vuejs</span></div>
+      <div class="card"><i class="fa-brands fa-angular"></i><span class="label">fa-angular</span></div>
+      <div class="card"><i class="fa-brands fa-node-js"></i><span class="label">fa-node-js</span></div>
+      <div class="card"><i class="fa-brands fa-js"></i><span class="label">fa-js</span></div>
+      <div class="card"><i class="fa-brands fa-css3"></i><span class="label">fa-css3</span></div>
+      <div class="card"><i class="fa-brands fa-html5"></i><span class="label">fa-html5</span></div>
+      <div class="card"><i class="fa-brands fa-linux"></i><span class="label">fa-linux</span></div>
+      <div class="card"><i class="fa-brands fa-python"></i><span class="label">fa-python</span></div>
+      <div class="card"><i class="fa-brands fa-java"></i><span class="label">fa-java</span></div>
+      <div class="card"><i class="fa-brands fa-aws"></i><span class="label">fa-aws</span></div>
+      <div class="card"><i class="fa-brands fa-discord"></i><span class="label">fa-discord</span></div>
+      <div class="card"><i class="fa-brands fa-slack"></i><span class="label">fa-slack</span></div>
+      <div class="card"><i class="fa-brands fa-spotify"></i><span class="label">fa-spotify</span></div>
+      <div class="card"><i class="fa-brands fa-youtube"></i><span class="label">fa-youtube</span></div>
+      <div class="card"><i class="fa-brands fa-steam"></i><span class="label">fa-steam</span></div>
+      <div class="card"><i class="fa-brands fa-linkedin"></i><span class="label">fa-linkedin</span></div>
+      <div class="card"><i class="fa-brands fa-instagram"></i><span class="label">fa-instagram</span></div>
+      <div class="card"><i class="fa-brands fa-pinterest"></i><span class="label">fa-pinterest</span></div>
+      <div class="card"><i class="fa-brands fa-reddit"></i><span class="label">fa-reddit</span></div>
+      <div class="card"><i class="fa-brands fa-twitch"></i><span class="label">fa-twitch</span></div>
+      <div class="card"><i class="fa-brands fa-weixin"></i><span class="label">fa-weixin</span></div>
+      <div class="card"><i class="fa-brands fa-alipay"></i><span class="label">fa-alipay</span></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>移动端底部导航 - iconfont</title>
+<link rel="stylesheet" href="font/font_5244716_y7f6ouk7gp8/iconfont.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e9ecf1;
+    color: #333;
+  }
+  .phone {
+    position: relative;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: #f5f6f8;
+    box-shadow: 0 0 24px rgba(0,0,0,.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .status-bar {
+    height: 44px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #fff;
+  }
+  .app-header {
+    flex: 0 0 auto;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2f6bff, #6aa5ff);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .banner {
+    height: 140px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff9a56, #ff6a88);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .banner .logo { font-size: 34px; }
+  .banner span { color: #fff; font-size: 14px; letter-spacing: 2px; }
+  .grid-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .item-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .item-card .iconfont { font-size: 26px; color: #2f6bff; }
+  .item-card span { font-size: 12px; color: #888; }
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    flex: 0 0 auto;
+    display: flex;
+    background: #fff;
+    border-top: 1px solid #eee;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+  .tab-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 7px 0 5px;
+    color: #999;
+    font-size: 11px;
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+  }
+  .tab-item .icon-wrap { position: relative; display: inline-block; }
+  .tab-item .iconfont { font-size: 23px; }
+  .tab-item.active { color: #2f6bff; }
+  .tab-item .badge-num {
+    position: absolute;
+    top: -5px;
+    right: -12px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 10px;
+    line-height: 17px;
+    text-align: center;
+    font-style: normal;
+    border: 2px solid #fff;
+  }
+  .tab-item .badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff3b30;
+    border: 1.5px solid #fff;
+  }
+  .tab-item .badge-num:empty, .tab-item .badge-dot:empty { display: none; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>iconfont 导航示例</span>
+      <span>100%</span>
+    </div>
+    <div class="app-header">移动应用</div>
+
+    <div class="content">
+      <div class="banner">
+        <i class="iconfont icon-luckin_logo_blue logo"></i>
+        <span>LUCKIN COFFEE</span>
+      </div>
+      <div class="grid-list">
+        <div class="item-card"><i class="iconfont icon-shouye"></i><span>首页</span></div>
+        <div class="item-card"><i class="iconfont icon-shipin"></i><span>视频</span></div>
+        <div class="item-card"><i class="iconfont icon-pinglun"></i><span>评论</span></div>
+        <div class="item-card"><i class="iconfont icon-wode"></i><span>我的</span></div>
+        <div class="item-card"><i class="iconfont icon-dianzan"></i><span>点赞</span></div>
+        <div class="item-card"><i class="iconfont icon-shoucang"></i><span>收藏</span></div>
+      </div>
+    </div>
+
+    <nav class="tab-bar">
+      <a class="tab-item active">
+        <span class="icon-wrap"><i class="iconfont icon-shouye"></i></span>
+        首页
+      </a>
+      <a class="tab-item">
+        <span class="icon-wrap"><i class="iconfont icon-shipin"></i></span>
+        视频
+      </a>
+      <a class="tab-item">
+        <span class="icon-wrap"><i class="iconfont icon-pinglun"></i><i class="badge-num">12</i></span>
+        评论
+      </a>
+      <a class="tab-item">
+        <span class="icon-wrap"><i class="iconfont icon-wode"></i><i class="badge-dot"></i></span>
+        我的
+      </a>
+    </nav>
+  </div>
+</body>
+</html>

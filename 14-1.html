@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14-1 JS数据类型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(3, 300px);
+            gap: 20px;
+        }
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 22px;
+        }
+        .tag {
+            display: inline-block;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+        .card h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .card p {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            min-height: 66px;
+        }
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            padding: 14px 16px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <span class="tag">number</span>
+            <h2>数值型 number</h2>
+            <p>表示整数或小数（如 2026、3.14），可进行算术运算。</p>
+            <div class="code">var y1_num = 2026;<br>typeof → "number"</div>
+        </div>
+        <div class="card">
+            <span class="tag">string</span>
+            <h2>字符串型 string</h2>
+            <p>用单引号或双引号包裹的一串文本。</p>
+            <div class="code">var y1_str = "周雨欣";<br>typeof → "string"</div>
+        </div>
+        <div class="card">
+            <span class="tag">boolean</span>
+            <h2>布尔型 boolean</h2>
+            <p>只有 true（真）和 false（假）两个值，常用于条件判断。</p>
+            <div class="code">var y1_bool = true;<br>typeof → "boolean"</div>
+        </div>
+        <div class="card">
+            <span class="tag">undefined</span>
+            <h2>未定义型 undefined</h2>
+            <p>变量声明后未赋值时，它的类型就是 undefined。</p>
+            <div class="code">var y1_und;<br>typeof → "undefined"</div>
+        </div>
+        <div class="card">
+            <span class="tag">object</span>
+            <h2>空型 null</h2>
+            <p>表示"空值"。typeof 检测结果为 object，属于历史遗留的特殊情况。</p>
+            <div class="code">var y1_nul = null;<br>typeof → "object"</div>
+        </div>
+        <div class="card">
+            <span class="tag">object</span>
+            <h2>对象型 object</h2>
+            <p>由键值对组成的复合数据，typeof 检测结果为 object。</p>
+            <div class="code">var y1_obj = { y1_name: "周雨欣" };<br>typeof → "object"</div>
+        </div>
+    </div>
+</body>
+</html>

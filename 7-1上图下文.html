@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+       ul{
+        list-style: none;
+        }
+        img{
+            display: block;
+        }
+        .ilist{
+            display: flex;
+            margin: 8px;
+        }
+        .ilist li{
+            width:30%;
+            margin-right: 10px;
+            flex-grow: 1;
+            position: relative;
+        }
+        .ilist li img{
+            width: 100%;
+            height: 100%;
+        }
+        .ilist li p{
+            text-align: center;
+            font-size: 14px;
+            line-height: 33px;
+            /*绝对定位*/
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(0,0,0,.5);
+            color: #fff;
+            /*加粗*/
+            font-weight: bold;
+        }
+       
+   
+    </style>
+</head>
+<body>
+   <ul class="ilist">
+    <li><img src="./img/1.jpg">
+        <p>图片1</p>
+    </li>
+    <li><img src="./img/2.jpg">
+        <p>图片2</p>
+    </li>
+    <li><img src="./img/3.jpg">
+        <p>图片3</p>
+    </li>
+   
+    </ul> 
+</body>
+</html>

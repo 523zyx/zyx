@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>523周雨欣</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f6d365, #fda085);
+            font-family: Arial, sans-serif;
+        }
+
+        .card {
+            width: 320px;
+            padding: 30px 24px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            backdrop-filter: blur(8px);
+            animation: cardMove 4s ease-in-out infinite alternate;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff7eb3, #ffb347, #7afcff);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            animation: colorChange 4s ease-in-out infinite;
+        }
+
+        .name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .info {
+            font-size: 18px;
+            color: #fff;
+            line-height: 1.8;
+            letter-spacing: 1px;
+        }
+
+        @keyframes colorChange {
+            0% {
+                background: linear-gradient(135deg, #ff7eb3, #ffb347, #7afcff);
+            }
+            25% {
+                background: linear-gradient(135deg, #7afcff, #7a7dff, #ff7eb3);
+            }
+            50% {
+                background: linear-gradient(135deg, #ffd166, #06d6a0, #118ab2);
+            }
+            75% {
+                background: linear-gradient(135deg, #ff9f1c, #ff6b6b, #c77dff);
+            }
+            100% {
+                background: linear-gradient(135deg, #7afcff, #a0c4ff, #ffb3c1);
+            }
+        }
+
+        @keyframes cardMove {
+            0% {
+                transform: translateY(0px) scale(1);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.03);
+                box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            }
+            100% {
+                transform: translateY(0px) scale(1);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="avatar"></div>
+        <div class="name">523周雨欣</div>
+        <div class="info">
+            个人信息<br>
+            姓名：周雨欣<br>
+            编号：523
+        </div>
+    </div>
+</body>
+</html>

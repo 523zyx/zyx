@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>联系 - 个人作品集</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/main.js"></script>
+</head>
+<body>
+    <header class="nav">
+        <div class="container nav-inner">
+            <a class="logo" href="index.html">我的作品集</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="index.html">首页</a>
+                <a href="about.html">关于我</a>
+                <a href="works.html">作品</a>
+                <a href="skill.html">技能</a>
+                <a href="contact.html">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="themeToggle" aria-label="切换主题">🌗</button>
+                <button id="burger" class="burger" aria-label="菜单">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container section reveal">
+        <h2>联系我</h2>
+        <form id="contactForm" class="contact-form" novalidate>
+            <label>姓名<input type="text" id="name" required></label>
+            <label>邮箱<input type="email" id="email" required></label>
+            <label>留言<textarea id="message" rows="5" required></textarea></label>
+            <button type="submit">提交</button>
+        </form>
+    </main>
+
+    <!-- 提示模态框 -->
+    <div class="modal" id="contactModal" aria-hidden="true">
+        <div class="modal-backdrop" id="contactBackdrop"></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <button class="modal-close" id="contactModalClose">✕</button>
+            <div id="contactModalBody"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">© 2026 周雨欣</div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-10-26
+    使用大模型：GLM-5.3-Flash
+    功能名称：数7游戏
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15-1 数7游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .rule {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(10, 80px);
+            gap: 10px;
+            justify-content: center;
+        }
+        .box {
+            width: 80px;
+            height: 80px;
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+        /* 满足数7规则：空盒子 */
+        .box.empty {
+            background: #f0e9d8;
+            border: 1px dashed #d94f2b;
+        }
+    </style>
+</head>
+<body>
+    <h1>数7游戏（1~100）</h1>
+    <p class="rule">规则：7的倍数、个位为7、十位为7 的数字需要"过"，显示为空盒子；其余显示数字。</p>
+    <div class="container" id="container"></div>
+
+    <script>
+        var container = document.getElementById("container");
+
+        // 判断是否满足数7规则
+        function isSeven(n) {
+            if (n % 7 === 0) {          // 7的倍数
+                return true;
+            }
+            if (n % 10 === 7) {         // 个位是7
+                return true;
+            }
+            if (parseInt(n / 10) % 10 === 7) {  // 十位是7（70~79）
+                return true;
+            }
+            return false;
+        }
+
+        for (var i = 1; i <= 100; i++) {
+            var box = document.createElement("div");
+            box.className = "box";
+            if (isSeven(i)) {
+                box.className += " empty";   // 空盒子
+            } else {
+                box.innerHTML = i;           // 显示数字
+            }
+            container.appendChild(box);
+        }
+    </script>
+</body>
+</html>

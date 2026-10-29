@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        img{
+            display: block;
+        }
+        ul{
+            list-style: none;
+        }
+        .list{
+            display: flex;
+            flex-wrap: wrap;
+            margin: 10px;
+        }
+        .list li{
+            width: 30%;
+            overflow: hidden;
+            position: relative;
+            flex-grow: 1;
+            margin: 6px;
+
+        }
+        .list img{
+            width: 100%;
+            transition: all 0.5s ease-in-out;
+        }
+        .text{
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 33px;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            transition: all 0.5s ease-in-out;
+            font-size: 14px;
+        }
+        .text h3{
+            height: 33px;
+            line-height: 33px;
+            text-align: center;
+        }
+        .text p{
+            height: 40px;
+            line-height: 20px;
+            padding: 5px;
+            overflow: hidden;
+            /* 首行空两格 */
+            text-indent: 2em;
+            font-size: 12px;
+            }
+        .list li:nth-child(3n+1):hover img{
+            transform: scale(1.7);
+        }
+        .list li:nth-child(3n+2):hover .text{
+            height: 100%;
+        }
+        .list li:nth-child(3n):hover .text{
+            height: 83px;
+        }
+
+    </style>
+</head>
+<body>
+    <h2>周雨欣的transition过渡</h2>
+    <ul class="list">
+        <li>
+            <img src="./img/1.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/2.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/3.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/1.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/2.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/3.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/1.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/2.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+        <li>
+            <img src="./img/3.jpg" alt="">
+            <div class="text">
+                <h3>周雨欣的标题</h3>
+                <p>下面的文字，默认隐藏，可能在hover的时候显示文字，可能输=是固定文字，也可能是100%高度
+                     </p>
+            </div>
+        </li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>周雨欣幻灯片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .slider {
+            width: 520px;
+            height: 420px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            transform: translateX(100%);
+            animation: slideMove 9s infinite;
+            background: transparent;
+        }
+
+        .slide:nth-child(2) {
+            animation-delay: 3s;
+        }
+
+        .slide:nth-child(3) {
+            animation-delay: 6s;
+        }
+
+        .slide img {
+            display: block;
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .slide .text {
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        @keyframes slideMove {
+            0% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            15% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            30% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            45% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slider">
+        <div class="slide">
+            <img src="./img/1.jpg" alt="图片1">
+            <div class="text">周雨欣</div>
+        </div>
+        <div class="slide">
+            <img src="./img/2.jpg" alt="图片2">
+            <div class="text">周雨欣</div>
+        </div>
+        <div class="slide">
+            <img src="./img/3.jpg" alt="图片3">
+            <div class="text">周雨欣</div>
+        </div>
+    </div>
+</body>
+</html>

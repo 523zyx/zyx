@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>技能 - 个人作品集</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/main.js"></script>
+</head>
+<body>
+    <header class="nav">
+        <div class="container nav-inner">
+            <a class="logo" href="index.html">我的作品集</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="index.html">首页</a>
+                <a href="about.html">关于我</a>
+                <a href="works.html">作品</a>
+                <a href="skill.html">技能</a>
+                <a href="contact.html">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="themeToggle" aria-label="切换主题">🌗</button>
+                <button id="burger" class="burger" aria-label="菜单">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="section reveal">
+            <h2>技能展示</h2>
+            <p>页面滚动到下方时进度条会动态加载。</p>
+            <div class="skills" id="skills">
+                <div class="skill">
+                    <div class="skill-head"><strong>HTML</strong><span>90%</span></div>
+                    <div class="progress"><div class="progress-bar" data-percent="90"></div></div>
+                </div>
+                <div class="skill">
+                    <div class="skill-head"><strong>CSS</strong><span>85%</span></div>
+                    <div class="progress"><div class="progress-bar" data-percent="85"></div></div>
+                </div>
+                <div class="skill">
+                    <div class="skill-head"><strong>JavaScript</strong><span>75%</span></div>
+                    <div class="progress"><div class="progress-bar" data-percent="75"></div></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">© 2026 周雨欣</div>
+    </footer>
+</body>
+</html>

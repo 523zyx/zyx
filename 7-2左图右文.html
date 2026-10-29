@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ededed;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .nav-panel {
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto 20px;
+            background: #fff;
+            border: 1px solid #d9d9d9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            padding: 18px 22px;
+        }
+
+        .nav-panel h2 {
+            font-size: 20px;
+            color: #2d2d2d;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .page-links {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .page-links li {
+            list-style: none;
+        }
+
+        .page-links a {
+            display: inline-block;
+            padding: 8px 14px;
+            background: #eef4ff;
+            border: 1px solid #cfe0ff;
+            border-radius: 18px;
+            text-decoration: none;
+            color: #2a5bd7;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .page-links a:hover {
+            background: #2a5bd7;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .box {
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            background: #f7f7f7;
+            border: 1px solid #d9d9d9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .zitem {
+            display: flex;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px dotted #d9d9d9;
+            min-height: 118px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .zitem:last-child {
+            border-bottom: none;
+        }
+
+        .zitem img {
+            width: 120px;
+            height: 75px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid #d8d8d8;
+            background: #f0f0f0;
+        }
+
+        .ytext {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .ytext h3 {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 400;
+            color: #2d2d2d;
+            line-height: 1.5;
+        }
+
+        .authon,
+        .time {
+            font-size: 15px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .authon {
+            margin-left: 20px;
+        }
+
+        .time {
+            margin-left: 28px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-panel">
+        <h2>全部网页链接</h2>
+        <ul class="page-links">
+            <li><a href="index.html">首页</a></li>
+            <li><a href="2-2.html">2-2.html</a></li>
+            <li><a href="4-1%20css2.html">4-1 css2.html</a></li>
+            <li><a href="5-2盒模型.html">5-2盒模型.html</a></li>
+            <li><a href="6-1%20flex.html">6-1 flex.html</a></li>
+            <li><a href="6-2.html">6-2.html</a></li>
+            <li><a href="7-1上图下文.html">7-1上图下文.html</a></li>
+            <li><a href="7-2左图右文.html">7-2左图右文.html</a></li>
+            <li><a href="文件/add.html">文件/add.html</a></li>
+            <li><a href="文件/paho_mqtt/about.html">文件/paho_mqtt/about.html</a></li>
+            <li><a href="文件/paho_mqtt/notice.html">文件/paho_mqtt/notice.html</a></li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <a class="zitem" href="index.html">
+            <img src="./img/1.jpg" alt="">
+            <div class="ytext">
+                <h3>首页：周雨欣的高级网页设计学习导航</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="2-2.html">
+            <img src="./img/2.jpg" alt="">
+            <div class="ytext">
+                <h3>2-2.html：HTML 基础与结构练习</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="4-1%20css2.html">
+            <img src="./img/3.jpg" alt="">
+            <div class="ytext">
+                <h3>4-1 css2.html：CSS 选择器与样式练习</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="5-2盒模型.html">
+            <img src="./img/1.jpg" alt="">
+            <div class="ytext">
+                <h3>5-2盒模型.html：盒模型布局实战</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="6-1%20flex.html">
+            <img src="./img/2.jpg" alt="">
+            <div class="ytext">
+                <h3>6-1 flex.html：Flex 弹性布局案例</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="6-2.html">
+            <img src="./img/3.jpg" alt="">
+            <div class="ytext">
+                <h3>6-2.html：网页布局进阶练习</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="7-1上图下文.html">
+            <img src="./img/1.jpg" alt="">
+            <div class="ytext">
+                <h3>7-1上图下文.html：上图下文排版</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="文件/add.html">
+            <img src="./img/2.jpg" alt="">
+            <div class="ytext">
+                <h3>文件/add.html：子目录页面入口</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="文件/paho_mqtt/about.html">
+            <img src="./img/3.jpg" alt="">
+            <div class="ytext">
+                <h3>文件/paho_mqtt/about.html：关于页面</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+
+        <a class="zitem" href="文件/paho_mqtt/notice.html">
+            <img src="./img/1.jpg" alt="">
+            <div class="ytext">
+                <h3>文件/paho_mqtt/notice.html：公告页面</h3>
+                <span class="authon">周雨欣</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </a>
+    </div>
+</body>
+</html>
