@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-10-29
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：JavaScript 数组主要方法可视化演示
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-1 JS数组主要方法</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .rule {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 34px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 460px);
+            gap: 20px;
+            justify-content: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .tag {
+            display: inline-block;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: Consolas, monospace;
+            letter-spacing: .5px;
+        }
+        .card h2 {
+            font-size: 17px;
+            color: #333;
+        }
+        .desc {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.7;
+            margin-bottom: 14px;
+            min-height: 44px;
+        }
+        /* 数组可视区 */
+        .stage {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 14px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            min-height: 66px;
+            margin-bottom: 14px;
+            transition: background .3s;
+        }
+        .stage.playing {
+            background: #fbf3e4;
+            border-color: #d94f2b;
+        }
+        .item {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 8px;
+            background: #fdfbf4;
+            border: 1px solid #e2d8c2;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            transition: all .35s ease;
+        }
+        /* 被"操作"的格子：高亮跳动 */
+        .item.active {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+            transform: translateY(-8px) scale(1.12);
+            box-shadow: 0 6px 14px rgba(217, 79, 43, .35);
+        }
+        /* 被删除的格子：淡出 */
+        .item.removed {
+            opacity: 0;
+            transform: scale(.3) rotate(12deg);
+        }
+        /* 新出现的格子：淡入缩放 */
+        .item.added {
+            background: #7fa650;
+            border-color: #7fa650;
+            color: #fff;
+            animation: pop .45s ease;
+        }
+        @keyframes pop {
+            0%   { opacity: 0; transform: scale(.2); }
+            70%  { transform: scale(1.15); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .arrow {
+            color: #b9ac8c;
+            font-size: 16px;
+        }
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .code .m { color: #ffd479; }
+        .code .k { color: #8fd0ff; }
+        .res {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #666;
+            min-height: 34px;
+            border-top: 1px dashed #ece4d0;
+            padding-top: 12px;
+        }
+        .res b {
+            font-family: Consolas, monospace;
+            color: #d94f2b;
+            font-size: 13px;
+        }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+            flex-shrink: 0;
+        }
+        .btn:hover {
+            background: #b93f1f;
+        }
+        .btn:active {
+            transform: scale(.95);
+        }
+        .btn.ghost {
+            background: transparent;
+            color: #a99372;
+            border: 1px solid #ddd2b8;
+        }
+        .btn.ghost:hover {
+            background: #f2ece0;
+            color: #7a6a4d;
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 36px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript 数组的主要方法</h1>
+    <p class="rule">点击每个卡片里的按钮，观察格子里的变化 —— 红色是被操作的元素，绿色是新增的元素。</p>
+
+    <div class="container" id="container"></div>
+
+    <footer>数组本质上是"带编号的储物柜"：方法就是不同的搬运规则。</footer>
+
+    <script>
+        /* ============ 数据 ============ */
+        var baseArr = ["苹果", "香蕉", "西瓜", "葡萄"];
+
+        /*
+            每一个 demo 描述一个数组方法：
+            name  方法名
+            title 中文说明标题
+            desc  通俗解释
+            code  显示的代码（带简易高亮标记）
+            run   拿到 (容器元素, 结果回调) 后执行的动画
+        */
+        var demos = [
+            {
+                name: "push",
+                title: "末尾添加",
+                desc: "往数组的最后面塞进一个元素，排队时新来的人站到队尾。返回新长度。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">push</span>("芒果");',
+                run: function (stage, done) {
+                    var newItem = makeItem("芒果");
+                    newItem.classList.add("added");
+                    var items = stage.querySelectorAll(".item");
+                    var last = items[items.length - 1];
+                    last.classList.add("active");
+                    setTimeout(function () {
+                        last.classList.remove("active");
+                        stage.appendChild(newItem);
+                        done('["苹果","香蕉","西瓜","葡萄","芒果"]', 5);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "pop",
+                title: "末尾删除",
+                desc: "把数组最后一个元素取走，像从叠好的盘子顶部拿走一只。返回被删掉的那个值。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">pop</span>();',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var last = items[items.length - 1];
+                    last.classList.add("active");
+                    setTimeout(function () {
+                        last.classList.add("removed");
+                        setTimeout(function () {
+                            last.remove();
+                            done('["苹果","香蕉","西瓜"]', 3);
+                        }, 350);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "unshift",
+                title: "开头添加",
+                desc: "在数组最前面插入元素，队列里插队到第一个，后面的全部往后挪一位。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">unshift</span>("草莓");',
+                run: function (stage, done) {
+                    var newItem = makeItem("草莓");
+                    newItem.classList.add("added");
+                    var first = stage.querySelector(".item");
+                    first.classList.add("active");
+                    setTimeout(function () {
+                        first.classList.remove("active");
+                        stage.insertBefore(newItem, stage.firstChild);
+                        done('["草莓","苹果","香蕉","西瓜","葡萄"]', 5);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "shift",
+                title: "开头删除",
+                desc: "删除数组第一个元素，队伍最前面的人离开，其余人整体前移。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">shift</span>();',
+                run: function (stage, done) {
+                    var first = stage.querySelector(".item");
+                    first.classList.add("active");
+                    setTimeout(function () {
+                        first.classList.add("removed");
+                        setTimeout(function () {
+                            first.remove();
+                            done('["香蕉","西瓜","葡萄"]', 3);
+                        }, 350);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "splice",
+                title: "中间插入 / 删除",
+                desc: "万能剪刀：从第 index 个位置开始，删掉 count 个元素，还能顺手插入新元素。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\n<span class="k">// 从下标1开始删2个，插入"桃子"</span>\narr.<span class="m">splice</span>(1, 2, "桃子");',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var target = items[1];
+                    var target2 = items[2];
+                    target.classList.add("active");
+                    target2.classList.add("active");
+                    setTimeout(function () {
+                        target.classList.add("removed");
+                        target2.classList.add("removed");
+                        setTimeout(function () {
+                            target.remove();
+                            target2.remove();
+                            var newItem = makeItem("桃子");
+                            newItem.classList.add("added");
+                            var now = stage.querySelectorAll(".item");
+                            stage.insertBefore(newItem, now[1] || null);
+                            done('["苹果","桃子","葡萄"]', 3);
+                        }, 350);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "join",
+                title: "拼接成字符串",
+                desc: "把数组里所有元素用指定分隔符粘成一根字符串，数组本身不变。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">join</span>(" - ");',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) items[i - 1].classList.remove("active");
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            done('"苹果 - 香蕉 - 西瓜 - 葡萄"', 4);
+                            return;
+                        }
+                        items[i].classList.add("active");
+                        // 在元素之间插入分隔符
+                        if (i > 0) {
+                            var sep = document.createElement("span");
+                            sep.className = "arrow";
+                            sep.textContent = " - ";
+                            stage.insertBefore(sep, items[i]);
+                        }
+                        i++;
+                    }, 420);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "slice",
+                title: "截取片段",
+                desc: "从原数组中'复印'出一段（含起点、不含终点），原数组毫发无损。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">slice</span>(1, 3);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    // 先全部变暗
+                    for (var i = 0; i < items.length; i++) {
+                        items[i].style.opacity = ".3";
+                    }
+                    setTimeout(function () {
+                        items[1].classList.add("active");
+                        items[2].classList.add("active");
+                        items[1].style.opacity = "1";
+                        items[2].style.opacity = "1";
+                        done('["香蕉","西瓜"]（原数组不变）', 2);
+                    }, 300);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "concat",
+                title: "合并数组",
+                desc: "把另一个数组（或者几个值）接到当前数组后面，得到一个新数组。",
+                code: '<span class="k">var</span> a = ["苹果","香蕉"];\n<span class="k">var</span> b = ["西瓜","葡萄"];\na.<span class="m">concat</span>(b);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var insert = ["草莓", "芒果"];
+                    var i = 0;
+                    var timer = setInterval(function () {
+                        if (i >= insert.length) {
+                            clearInterval(timer);
+                            done('["苹果","香蕉","西瓜","葡萄","草莓","芒果"]', 6);
+                            return;
+                        }
+                        var it = makeItem(insert[i]);
+                        it.classList.add("added");
+                        stage.appendChild(it);
+                        i++;
+                    }, 420);
+                    // 高亮被合并过来的第二个数组
+                    for (var j = 0; j < items.length; j++) {
+                        (function (el) {
+                            setTimeout(function () { el.classList.add("active"); }, j * 120);
+                            setTimeout(function () { el.classList.remove("active"); }, 500);
+                        })(items[j]);
+                    }
+                },
+                reset: function (stage) { render(stage, ["苹果", "香蕉", "西瓜", "葡萄"]); }
+            },
+            {
+                name: "indexOf",
+                title: "查找位置",
+                desc: "告诉你某个元素排第几号（下标从 0 开始），找不到就返回 -1。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">indexOf</span>("西瓜");',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) items[i - 1].classList.remove("active");
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            // 停在找到的那个上面
+                            items[2].classList.add("active");
+                            done('2（从 0 数，第 3 个）', null);
+                            return;
+                        }
+                        items[i].classList.add("active");
+                        if (items[i].textContent === "西瓜") {
+                            clearInterval(timer);
+                            done('2（从 0 数，第 3 个）', null);
+                            return;
+                        }
+                        i++;
+                    }, 420);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "reverse",
+                title: "反转数组",
+                desc: "首尾对调，整个队伍原地调头 —— 这个方法会改掉原数组。",
+                code: '<span class="k">var</span> arr = ["苹果","香蕉","西瓜","葡萄"];\narr.<span class="m">reverse</span>();',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    for (var i = 0; i < items.length; i++) items[i].classList.add("active");
+                    setTimeout(function () {
+                        // 倒序重新挂载
+                        for (var j = items.length - 1; j >= 0; j--) {
+                            stage.appendChild(items[j]);
+                        }
+                        setTimeout(function () {
+                            for (var k = 0; k < items.length; k++) items[k].classList.remove("active");
+                            done('["葡萄","西瓜","香蕉","苹果"]', 4);
+                        }, 500);
+                    }, 500);
+                },
+                reset: function (stage) { render(stage, baseArr); }
+            },
+            {
+                name: "sort",
+                title: "排序",
+                desc: "默认按字符串逐位比较排序，数字排序要自己传比较函数 (a, b) => a - b。",
+                code: '<span class="k">var</span> arr = [23, 5, 108, 47];\narr.<span class="m">sort</span>((a, b) => a - b);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    for (var i = 0; i < items.length; i++) items[i].classList.add("active");
+                    setTimeout(function () {
+                        // 冒泡式逐次比较，做出"排序中"的样子
+                        var arr = [23, 5, 108, 47];
+                        var sorted = arr.slice().sort(function (a, b) { return a - b; });
+                        var step = 0;
+                        var timer = setInterval(function () {
+                            if (step >= sorted.length) {
+                                clearInterval(timer);
+                                for (var k = 0; k < items.length; k++) items[k].classList.remove("active");
+                                done('[5, 23, 47, 108]', 4);
+                                return;
+                            }
+                            items[step].textContent = sorted[step];
+                            items[step].classList.add("added");
+                            (function (el) {
+                                setTimeout(function () { el.classList.remove("added"); }, 400);
+                            })(items[step]);
+                            step++;
+                        }, 350);
+                    }, 500);
+                },
+                reset: function (stage) {
+                    render(stage, [23, 5, 108, 47]);
+                },
+                initial: [23, 5, 108, 47]
+            },
+            {
+                name: "map",
+                title: "逐个加工",
+                desc: "把每个元素都丢进函数加工一遍，返回一个全新数组，长度和原来一样。",
+                code: '<span class="k">var</span> arr = [1, 2, 3, 4];\narr.<span class="m">map</span>(n => n * 2);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) {
+                            items[i - 1].classList.remove("added");
+                            items[i - 1].classList.remove("active");
+                        }
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            done('[2, 4, 6, 8]', 4);
+                            return;
+                        }
+                        var n = parseInt(items[i].textContent, 10);
+                        items[i].textContent = n * 2;
+                        items[i].classList.add("active", "added");
+                        i++;
+                    }, 420);
+                },
+                reset: function (stage) { render(stage, [1, 2, 3, 4]); },
+                initial: [1, 2, 3, 4]
+            },
+            {
+                name: "filter",
+                title: "筛选",
+                desc: "函数返回 true 的留下，返回 false 的淘汰，结果是长度变短的新数组。",
+                code: '<span class="k">var</span> arr = [12, 7, 25, 8, 33];\narr.<span class="m">filter</span>(n => n % 2 === 0);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) items[i - 1].classList.remove("active");
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            setTimeout(function () {
+                                var left = stage.querySelectorAll(".item");
+                                var vals = [];
+                                for (var j = 0; j < left.length; j++) vals.push(left[j].textContent);
+                                done("[" + vals.join(", ") + "]", left.length);
+                            }, 400);
+                            return;
+                        }
+                        var n = parseInt(items[i].textContent, 10);
+                        items[i].classList.add("active");
+                        if (n % 2 !== 0) {
+                            items[i].classList.add("removed");
+                            (function (el) {
+                                setTimeout(function () { el.remove(); }, 400);
+                            })(items[i]);
+                        }
+                        i++;
+                    }, 480);
+                },
+                reset: function (stage) { render(stage, [12, 7, 25, 8, 33]); },
+                initial: [12, 7, 25, 8, 33]
+            },
+            {
+                name: "forEach",
+                title: "遍历每个元素",
+                desc: "逐个访问所有元素执行操作，没有返回值（返回 undefined），常用于打印或累加。",
+                code: '<span class="k">var</span> sum = 0;\n[1,2,3,4].<span class="m">forEach</span>(n => sum += n);\n<span class="k">// sum = 10</span>',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var sum = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) items[i - 1].classList.remove("active");
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            done("累加结果 sum = " + sum + "，forEach 本身返回 undefined", null);
+                            return;
+                        }
+                        sum += parseInt(items[i].textContent, 10);
+                        items[i].classList.add("active");
+                        i++;
+                    }, 420);
+                },
+                reset: function (stage) { render(stage, [1, 2, 3, 4]); },
+                initial: [1, 2, 3, 4]
+            },
+            {
+                name: "reduce",
+                title: "归约成一个值",
+                desc: "用累加器把整个数组'压缩'成单个结果：求和、求最大值都靠它。",
+                code: '<span class="k">var</span> arr = [1, 2, 3, 4];\narr.<span class="m">reduce</span>((sum, n) => sum + n, 0);',
+                run: function (stage, done) {
+                    var items = stage.querySelectorAll(".item");
+                    var i = 0;
+                    var sum = 0;
+                    var timer = setInterval(function () {
+                        if (i > 0) items[i - 1].classList.remove("active");
+                        if (i >= items.length) {
+                            clearInterval(timer);
+                            var badge = makeItem("= " + sum);
+                            badge.classList.add("added");
+                            stage.appendChild(badge);
+                            done("累加器结果：" + sum, null);
+                            return;
+                        }
+                        sum += parseInt(items[i].textContent, 10);
+                        items[i].classList.add("active");
+                        items[i].style.opacity = ".45";
+                        i++;
+                    }, 420);
+                },
+                reset: function (stage) { render(stage, [1, 2, 3, 4]); },
+                initial: [1, 2, 3, 4]
+            }
+        ];
+
+        /* ============ 工具函数 ============ */
+        function makeItem(text) {
+            var div = document.createElement("div");
+            div.className = "item";
+            div.textContent = text;
+            return div;
+        }
+
+        function render(stage, arr) {
+            stage.innerHTML = "";
+            for (var i = 0; i < arr.length; i++) {
+                stage.appendChild(makeItem(arr[i]));
+            }
+        }
+
+        /* 生成一张卡片 */
+        function createCard(demo, index) {
+            var card = document.createElement("div");
+            card.className = "card";
+
+            var head = document.createElement("div");
+            head.className = "card-head";
+            var tag = document.createElement("span");
+            tag.className = "tag";
+            tag.textContent = demo.name + "()";
+            var h2 = document.createElement("h2");
+            h2.textContent = demo.title;
+            head.appendChild(h2);
+            head.appendChild(tag);
+
+            var desc = document.createElement("p");
+            desc.className = "desc";
+            desc.textContent = demo.desc;
+
+            var stage = document.createElement("div");
+            stage.className = "stage";
+
+            var code = document.createElement("div");
+            code.className = "code";
+            code.innerHTML = demo.code;
+
+            var res = document.createElement("div");
+            res.className = "res";
+
+            var btn = document.createElement("button");
+            btn.className = "btn";
+            btn.textContent = "运行 " + demo.name + "()";
+
+            var resetBtn = document.createElement("button");
+            resetBtn.className = "btn ghost";
+            resetBtn.textContent = "重置";
+
+            card.appendChild(head);
+            card.appendChild(desc);
+            card.appendChild(stage);
+            card.appendChild(code);
+            res.appendChild(btn);
+            res.appendChild(resetBtn);
+            card.appendChild(res);
+
+            var initArr = demo.initial || baseArr;
+            render(stage, initArr);
+
+            var running = false;
+
+            // 每次点击前先还原，保证结果可以反复观看
+            btn.addEventListener("click", function () {
+                if (running) return;
+                running = true;
+                res.querySelectorAll(".res-text").forEach(function (n) { n.remove(); });
+                demo.reset(stage);
+                stage.classList.add("playing");
+
+                // 等一帧让"还原"先渲染出来，再开始动画
+                setTimeout(function () {
+                    demo.run(stage, function (text) {
+                        var span = document.createElement("span");
+                        span.className = "res-text";
+                        span.innerHTML = "结果 → <b>" + text + "</b>";
+                        res.appendChild(span);
+                        stage.classList.remove("playing");
+                        running = false;
+                    });
+                }, 120);
+            });
+
+            resetBtn.addEventListener("click", function () {
+                if (running) return;
+                demo.reset(stage);
+                res.querySelectorAll(".res-text").forEach(function (n) { n.remove(); });
+                stage.classList.remove("playing");
+            });
+
+            return card;
+        }
+
+        /* ============ 初始化 ============ */
+        var container = document.getElementById("container");
+        for (var i = 0; i < demos.length; i++) {
+            container.appendChild(createCard(demos[i], i));
+        }
+    </script>
+</body>
+</html>

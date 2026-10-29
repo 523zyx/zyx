@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-10-29
+    使用大模型：CodeBuddy(Auto)
+    功能名称：新车上市列表（最新上市/即将上市 可切换标签页）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-4 新车上市</title>
+    <link rel="stylesheet" href="font/font_5244716_y7f6ouk7gp8/iconfont.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            color: #333;
+            padding: 40px 0;
+        }
+        .widget {
+            width: 288px;
+            margin: 0 auto;
+            border: 1px solid #c9d4e0;
+            background: #fff;
+        }
+
+        /* ============ 标签页 ============ */
+        .tabs {
+            display: flex;
+            background: #eef3f9;
+            border-bottom: 1px solid #c9d4e0;
+        }
+        .tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 9px 0;
+            font-size: 14px;
+            color: #4a6785;
+            cursor: pointer;
+            user-select: none;
+            transition: background .25s, color .25s;
+        }
+        .tab .iconfont {
+            font-size: 14px;
+        }
+        .tab:hover {
+            color: #2b3a67;
+        }
+        .tab.active {
+            background: #2b3a67;
+            color: #fff;
+        }
+
+        /* ============ 列表 ============ */
+        .head {
+            display: flex;
+            align-items: center;
+            padding: 9px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #dfe7f0;
+        }
+        .col-time  { width: 72px; }
+        .col-name  { flex: 1; }
+        .col-price { width: 96px; text-align: right; }
+
+        .list {
+            list-style: none;
+        }
+        .list li {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #e3ecf5;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .list li:last-child {
+            border-bottom: none;
+        }
+        .list li:hover {
+            background: #f3f8fd;
+        }
+        .list li.picked {
+            background: #eaf3fc;
+        }
+        .list .t {
+            width: 72px;
+            color: #7f92ab;
+        }
+        .list .n {
+            flex: 1;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 8px;
+        }
+        .list .n .iconfont {
+            font-size: 12px;
+            color: #f8736b;
+            margin-right: 4px;
+            display: none;
+        }
+        .list li.picked .n .iconfont {
+            display: inline;
+        }
+        .list .p {
+            width: 96px;
+            text-align: right;
+            color: #7f92ab;
+        }
+
+        /* 切换时的淡入效果 */
+        .panel {
+            animation: fade .35s ease;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget">
+        <div class="tabs">
+            <div class="tab active" data-tab="new">
+                <span class="iconfont icon-shoucang"></span>最新上市
+            </div>
+            <div class="tab" data-tab="soon">
+                <span class="iconfont icon-gengduo"></span>即将上市
+            </div>
+        </div>
+
+        <div class="head">
+            <span class="col-time">上市时间</span>
+            <span class="col-name">品牌/车型</span>
+            <span class="col-price">售价（万元）</span>
+        </div>
+
+        <ul class="list panel" id="list"></ul>
+    </div>
+
+    <script>
+        var data = {
+            new: [
+                { time: "12月13日", name: "沃尔沃S60L",        price: "26.98-38.49" },
+                { time: "12月12日", name: "Jeep牧马人龙腾典藏", price: "47.99-59.99" },
+                { time: "12月10日", name: "一汽大众高尔夫7",    price: "11.89-18.29" },
+                { time: "12月6日",  name: "2014款古思特",       price: "419.0-666.0" },
+                { time: "12月5日",  name: "起亚新K5",          price: "15.98-25.18" },
+                { time: "12月5日",  name: "2014款奥迪A8",       price: "22.98-28.68" }
+            ],
+            soon: [
+                { time: "12月20日", name: "宝马新X5",          price: "83.80-113.80" },
+                { time: "12月26日", name: "丰田新汉兰达",       price: "23.98-42.28" },
+                { time: "1月8日",   name: "奥迪新Q7",          price: "75.38-108.88" },
+                { time: "1月15日",  name: "奔驰新C级",          price: "31.48-45.98" },
+                { time: "1月20日",  name: "大众新途观",         price: "19.98-31.58" }
+            ]
+        };
+
+        var listBox = document.getElementById("list");
+        var tabs = document.querySelectorAll(".tab");
+        var current = "new";
+        var pickedIndex = -1;
+
+        /* 渲染某个标签页的数据 */
+        function render(key) {
+            listBox.innerHTML = "";
+            var arr = data[key];
+            for (var i = 0; i < arr.length; i++) {
+                var li = document.createElement("li");
+                li.innerHTML =
+                    '<span class="t">' + arr[i].time + "</span>" +
+                    '<span class="n"><span class="iconfont icon-dianzan"></span>' + arr[i].name + "</span>" +
+                    '<span class="p">' + arr[i].price + "</span>";
+                li.title = arr[i].name + "  " + arr[i].price + " 万元";
+
+                // 点击一行：收藏/取消收藏（出现小红心）
+                (function (row, idx) {
+                    row.addEventListener("click", function () {
+                        pickedIndex = (pickedIndex === idx) ? -1 : idx;
+                        var rows = listBox.querySelectorAll("li");
+                        for (var j = 0; j < rows.length; j++) {
+                            rows[j].classList.toggle("picked", j === pickedIndex);
+                        }
+                    });
+                })(li, i);
+
+                listBox.appendChild(li);
+            }
+            pickedIndex = -1;
+        }
+
+        /* 标签页切换 */
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                var key = tab.getAttribute("data-tab");
+                if (key === current) return;
+                current = key;
+                tabs.forEach(function (t) { t.classList.remove("active"); });
+                tab.classList.add("active");
+                // 重新触发淡入动画
+                listBox.classList.remove("panel");
+                void listBox.offsetWidth;
+                render(key);
+                listBox.classList.add("panel");
+            });
+        });
+
+        render("new");
+    </script>
+</body>
+</html>

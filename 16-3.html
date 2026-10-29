@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-10-29
+    使用大模型：CodeBuddy(Auto)
+    功能名称：翻译平台侧边栏（特价专区 + 社交关注），图标取自 font 目录 iconfont 字体
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-3 翻译平台侧边栏</title>
+    <link rel="stylesheet" href="font/font_5244716_y7f6ouk7gp8/iconfont.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            color: #333;
+        }
+
+        /* 顶部深蓝色导航条（截图中被裁切的部分） */
+        .topbar {
+            height: 42px;
+            background: #2b3a67;
+        }
+
+        .page {
+            width: 625px;
+            margin: 30px auto;
+            padding-bottom: 50px;
+        }
+
+        /* ============ 特价专区卡片 ============ */
+        .zone-card {
+            border: 1px solid #e8e8e8;
+            background: #fff;
+        }
+        .zone-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 16px;
+            border-left: 4px solid #f8736b;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .zone-title .iconfont {
+            font-size: 26px;
+            color: #9aa4ae;
+        }
+        .zone-title h2 {
+            font-size: 21px;
+            font-weight: normal;
+            color: #333;
+            letter-spacing: 1px;
+        }
+        .zone-list {
+            padding: 20px 16px 6px;
+        }
+        .zone-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ececec;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            transition: all .25s;
+        }
+        .zone-item:hover {
+            border-color: #f8736b;
+            box-shadow: 0 2px 10px rgba(248, 115, 107, .15);
+        }
+        .zone-item .iconfont {
+            font-size: 22px;
+            color: #f8736b;
+            margin-right: 16px;
+        }
+        .zone-item .name {
+            font-size: 16px;
+            color: #333;
+        }
+        .zone-item .count {
+            margin-left: auto;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .zone-item .count small {
+            font-size: 13px;
+            font-weight: normal;
+            color: #999;
+            margin-left: 4px;
+        }
+        .zone-more {
+            display: block;
+            width: calc(100% - 32px);
+            margin: 6px 16px 20px;
+            padding: 13px 0;
+            border: none;
+            background: #f8736b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 18px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background .25s;
+        }
+        .zone-more:hover {
+            background: #f05f56;
+        }
+
+        /* ============ 翻译加工厂蓝色按钮 ============ */
+        .factory-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 24px;
+            padding: 15px 0;
+            border: none;
+            background: #3f9ad6;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 19px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background .25s;
+        }
+        .factory-btn:hover {
+            background: #3489c2;
+        }
+        .factory-btn .iconfont {
+            font-size: 22px;
+        }
+
+        /* ============ 社交关注区 ============ */
+        .social {
+            display: flex;
+            gap: 14px;
+            margin-top: 24px;
+        }
+        .social-btns {
+            width: 138px;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+        .s-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 17px 0 17px 20px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: filter .25s, transform .2s;
+            border: none;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .s-btn:hover {
+            filter: brightness(1.08);
+            transform: translateX(3px);
+        }
+        .s-btn .iconfont {
+            font-size: 22px;
+        }
+        .s-weibo   { background: #f8736b; }
+        .s-gzh     { background: #4a90d2; }
+        .s-mini    { background: #5aa2dd; }
+        .s-android { background: #4a90d2; }
+
+        .qr-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .qr-box {
+            width: 252px;
+            height: 252px;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #eee;
+        }
+        .qr {
+            width: 100%;
+            height: 100%;
+            display: grid;
+        }
+        .qr i {
+            background: #111;
+        }
+        .qr i.w {
+            background: #fff;
+        }
+        .qr-caption {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar"></div>
+
+    <div class="page">
+        <!-- 特价专区 -->
+        <div class="zone-card">
+            <div class="zone-title">
+                <span class="iconfont icon-a-paichuzhongdie6"></span>
+                <h2>翻译平台特价专区</h2>
+            </div>
+            <div class="zone-list">
+                <div class="zone-item">
+                    <span class="iconfont icon-shoucang"></span>
+                    <span class="name">8折专区</span>
+                    <span class="count">738<small>篇</small></span>
+                </div>
+                <div class="zone-item">
+                    <span class="iconfont icon-shoucang"></span>
+                    <span class="name">5折专区</span>
+                    <span class="count">977<small>篇</small></span>
+                </div>
+                <div class="zone-item">
+                    <span class="iconfont icon-shoucang"></span>
+                    <span class="name">1龙币专区</span>
+                    <span class="count">11420<small>篇</small></span>
+                </div>
+            </div>
+            <button class="zone-more">更多翻译平台译文</button>
+        </div>
+
+        <!-- 翻译加工厂 -->
+        <button class="factory-btn">
+            <span class="iconfont icon-dianzan"></span>
+            进入翻译加工厂 贡献才气
+        </button>
+
+        <!-- 社交关注 -->
+        <div class="social">
+            <div class="social-btns">
+                <div class="s-btn s-weibo">
+                    <span class="iconfont icon-pinglun"></span>微博
+                </div>
+                <div class="s-btn s-gzh">
+                    <span class="iconfont icon-weixin"></span>公众号
+                </div>
+                <div class="s-btn s-mini">
+                    <span class="iconfont icon-shipin"></span>小程序
+                </div>
+                <div class="s-btn s-android">
+                    <span class="iconfont icon-pingguo"></span>安卓APP
+                </div>
+            </div>
+            <div class="qr-area">
+                <div class="qr-box">
+                    <div class="qr" id="qr"></div>
+                </div>
+                <div class="qr-caption">扫一扫关注龙腾官方微博</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* 用 JS 画一个"仿真二维码"：随机模块 + 三个定位角 + 中心 logo 留白 */
+        (function drawQR() {
+            var qr = document.getElementById("qr");
+            var N = 25;  // 25 x 25 格子
+            qr.style.gridTemplateColumns = "repeat(" + N + ", 1fr)";
+            qr.style.gridTemplateRows = "repeat(" + N + ", 1fr)";
+
+            // 定位角（左上、右上、左下）占 7x7
+            function inFinder(r, c) {
+                var f = [[0, 0], [0, N - 7], [N - 7, 0]];
+                for (var k = 0; k < 3; k++) {
+                    var fr = f[k][0], fc = f[k][1];
+                    if (r >= fr && r < fr + 7 && c >= fc && c < fc + 7) {
+                        // 外框 7x7 黑环 + 内部 3x3 黑块，环内一圈白
+                        var dr = r - fr, dc = c - fc;
+                        var edge = dr === 0 || dr === 6 || dc === 0 || dc === 6;
+                        var core = dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4;
+                        return edge || core ? "b" : "w";
+                    }
+                }
+                return null;
+            }
+
+            // 中心 logo 留白区
+            function inCenter(r, c) {
+                var s = Math.floor(N / 2) - 3;
+                return r >= s && r < s + 6 && c >= s && c < s + 6;
+            }
+
+            // 用一个简单的伪随机序列，保证每次刷新图案固定
+            var seed = 20261029;
+            function rand() {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            }
+
+            for (var r = 0; r < N; r++) {
+                for (var c = 0; c < N; c++) {
+                    var cell = document.createElement("i");
+                    var finder = inFinder(r, c);
+                    if (finder === "b") {
+                        // 黑
+                    } else if (finder === "w" || inCenter(r, c)) {
+                        cell.className = "w";
+                    } else if (rand() > 0.52) {
+                        cell.className = "w";
+                    }
+                    qr.appendChild(cell);
+                }
+            }
+
+            // 中心放一个"龙腾"小 logo
+            var logo = document.createElement("div");
+            logo.style.cssText =
+                "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);" +
+                "width:44px;height:44px;background:#1f5fa8;color:#fff;border-radius:6px;" +
+                "display:flex;align-items:center;justify-content:center;" +
+                "font-size:15px;font-weight:bold;letter-spacing:2px;";
+            logo.textContent = "龙腾";
+            qr.parentElement.style.position = "relative";
+            qr.parentElement.appendChild(logo);
+        })();
+    </script>
+</body>
+</html>

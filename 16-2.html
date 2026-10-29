@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-10-29
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：JavaScript 对象知识可视化演示
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-2 JS对象</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .rule {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 34px;
+        }
+        .wrap {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 460px);
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card.wide {
+            grid-column: 1 / -1;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .card-head h2 {
+            font-size: 17px;
+        }
+        .tag {
+            display: inline-block;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: Consolas, monospace;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+        }
+        .tag.blue {
+            background: #4a7fa5;
+        }
+        .tag.green {
+            background: #7fa650;
+        }
+        .desc {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.75;
+            padding: 12px 14px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 14px;
+        }
+        .code .k { color: #8fd0ff; }
+        .code .s { color: #b5e08a; }
+        .code .p { color: #ffd479; }
+        .code .c { color: #8b95a5; }
+        .res {
+            margin-top: auto;
+            border-top: 1px dashed #ece4d0;
+            padding-top: 12px;
+            font-size: 13px;
+            color: #666;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .res b {
+            color: #d94f2b;
+            font-family: Consolas, monospace;
+        }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+            flex-shrink: 0;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn.ghost {
+            background: transparent;
+            color: #a99372;
+            border: 1px solid #ddd2b8;
+        }
+        .btn.ghost:hover { background: #f2ece0; color: #7a6a4d; }
+
+        /* ---------- 键值卡片（对象的"抽屉"） ---------- */
+        .objbox {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+            transition: background .3s, border-color .3s;
+        }
+        .objbox.playing {
+            background: #fbf3e4;
+            border-color: #d94f2b;
+        }
+        .obj-name {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: #a99372;
+            margin-bottom: 10px;
+        }
+        .pairs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pair {
+            background: #fdfbf4;
+            border: 1px solid #e2d8c2;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 92px;
+            transition: all .35s ease;
+        }
+        .pair .pk {
+            display: block;
+            font-size: 11px;
+            color: #a99372;
+            font-family: Consolas, monospace;
+            margin-bottom: 2px;
+        }
+        .pair .pv {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            word-break: break-all;
+        }
+        .pair.active {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            transform: translateY(-6px) scale(1.06);
+            box-shadow: 0 6px 14px rgba(217, 79, 43, .3);
+        }
+        .pair.active .pk { color: #ffd8cc; }
+        .pair.active .pv { color: #fff; }
+        .pair.added {
+            border-color: #7fa650;
+            background: #f0f6e8;
+            animation: pop .45s ease;
+        }
+        .pair.added .pv { color: #557a2f; }
+        .pair.removed {
+            opacity: 0;
+            transform: scale(.3) rotate(10deg);
+        }
+        .pair.locked .pv::after {
+            content: " 🔒";
+            font-size: 11px;
+        }
+        @keyframes pop {
+            0% { opacity: 0; transform: scale(.3); }
+            70% { transform: scale(1.12); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ---------- 属性 vs 方法 对比 ---------- */
+        .compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        .col {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .col h3 {
+            font-size: 13px;
+            color: #a99372;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        .slot {
+            background: #fdfbf4;
+            border: 1px solid #e2d8c2;
+            border-radius: 8px;
+            padding: 9px 12px;
+            margin-bottom: 8px;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            color: #555;
+            transition: all .3s;
+        }
+        .slot:last-child { margin-bottom: 0; }
+        .slot.active {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+            transform: translateX(6px);
+        }
+        .slot.hit {
+            background: #7fa650;
+            border-color: #7fa650;
+            color: #fff;
+        }
+
+        /* ---------- this 指针 ---------- */
+        .this-demo {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 2;
+        }
+        .this-demo .who {
+            color: #4a7fa5;
+            font-weight: bold;
+            transition: all .3s;
+        }
+        .this-demo .who.active {
+            background: #d94f2b;
+            color: #fff;
+            padding: 1px 8px;
+            border-radius: 6px;
+        }
+
+        /* ---------- 继承链 ---------- */
+        .chain {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .node {
+            background: #fdfbf4;
+            border: 1px solid #e2d8c2;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            color: #555;
+            transition: all .3s;
+        }
+        .node.active {
+            background: #7fa650;
+            border-color: #7fa650;
+            color: #fff;
+            transform: scale(1.08);
+        }
+        .chain .arrow {
+            color: #b9ac8c;
+        }
+
+        /* ---------- 批量卡片 ---------- */
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .mini {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .mini h4 {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: #a99372;
+            margin-bottom: 8px;
+            font-weight: normal;
+        }
+        .mini .line {
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            color: #555;
+            line-height: 1.9;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 36px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript 对象</h1>
+    <p class="rule">对象是"键值对的集合"，像一排贴了标签的抽屉。点击按钮，看数据是怎么被存取、增删的。</p>
+
+    <div class="wrap">
+
+        <!-- 1. 对象的本质 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>对象长什么样</h2>
+                <span class="tag">object</span>
+            </div>
+            <p class="desc">用花括号包起来的一堆 key: value，key 是标签，value 是东西。取值用 <b>对象.属性</b> 或 <b>对象["属性"]</b>。</p>
+            <div class="objbox" id="box1">
+                <div class="obj-name">var student = { ... }</div>
+                <div class="pairs" id="pairs1"></div>
+            </div>
+            <div class="code"><span class="k">var</span> student = {
+  name: <span class="s">"周雨欣"</span>,
+  age: <span class="s">20</span>,
+  major: <span class="s">"信息管理"</span>
+};
+student.name      <span class="c">// 点语法</span>
+student[<span class="s">"name"</span>]  <span class="c">// 方括号语法</span></div>
+            <div class="res" id="res1">
+                <button class="btn" data-demo="1">逐个朗读属性</button>
+            </div>
+        </div>
+
+        <!-- 2. 属性 vs 方法 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>属性 与 方法</h2>
+                <span class="tag blue">property / method</span>
+            </div>
+            <p class="desc">属性是"数据"（静态的值），方法是"动作"（值为函数的属性，要加括号才能执行）。</p>
+            <div class="compare">
+                <div class="col">
+                    <h3>属性 property（存数据）</h3>
+                    <div id="props">
+                        <div class="slot">name: "周雨欣"</div>
+                        <div class="slot">age: 20</div>
+                        <div class="slot">major: "信息管理"</div>
+                    </div>
+                </div>
+                <div class="col">
+                    <h3>方法 method（做事情）</h3>
+                    <div id="metas">
+                        <div class="slot">study()</div>
+                        <div class="slot">sayHi()</div>
+                    </div>
+                </div>
+            </div>
+            <div class="code"><span class="k">var</span> student = {
+  name: <span class="s">"周雨欣"</span>,          <span class="c">// 属性</span>
+  study: <span class="k">function</span>() {       <span class="c">// 方法</span>
+    <span class="k">return this</span>.name + <span class="s">" 在学习"</span>;
+  }
+};
+student.study();  <span class="c">// ✅ 加括号，得到结果</span>
+student.study;    <span class="c">// ❌ 没有值，只是一段函数</span></div>
+            <div class="res" id="res2">
+                <button class="btn" data-demo="2">调用方法看看</button>
+            </div>
+        </div>
+
+        <!-- 3. 增删改查 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>增、删、改、查</h2>
+                <span class="tag green">CRUD</span>
+            </div>
+            <p class="desc">点语法既能读也能写：赋值就是新增或修改，<b>delete</b> 用来删掉一个属性。</p>
+            <div class="objbox" id="box3">
+                <div class="obj-name">var book = { ... }</div>
+                <div class="pairs" id="pairs3"></div>
+            </div>
+            <div class="code"><span class="k">var</span> book = { title: <span class="s">"JavaScript"</span>, price: <span class="s">59</span> };
+book.author = <span class="s">"周雨欣"</span>;   <span class="c">// 增</span>
+book.price = <span class="s">49</span>;         <span class="c">// 改</span>
+<span class="k">delete</span> book.title;       <span class="c">// 删</span>
+book.author;             <span class="c">// 查</span></div>
+            <div class="res" id="res3">
+                <button class="btn" data-demo="3">依次演示 CRUD</button>
+                <button class="btn ghost" data-reset="3">重置</button>
+            </div>
+        </div>
+
+        <!-- 4. this 指向 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>方法里的 this</h2>
+                <span class="tag">this</span>
+            </div>
+            <p class="desc">方法里的 <b>this</b> 指向"调用它的那个对象"。谁点了这个按钮，this 就是谁。</p>
+            <div class="this-demo" id="thisbox">
+                <div><span class="k" style="color:#8fd0ff">person</span>.intro() → <span class="who">this</span>.name = <b id="thisVal">?</b></div>
+            </div>
+            <div class="code"><span class="k">var</span> person = {
+  name: <span class="s">"周雨欣"</span>,
+  intro: <span class="k">function</span>() {
+    <span class="k">return</span> <span class="s">"我是"</span> + <span class="k">this</span>.name;
+  }
+};
+person.intro();   <span class="c">// "我是周雨欣"</span></div>
+            <div class="res" id="res4">
+                <button class="btn" data-demo="4">执行 person.intro()</button>
+            </div>
+        </div>
+
+        <!-- 5. 遍历对象 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>遍历对象</h2>
+                <span class="tag blue">for...in</span>
+            </div>
+            <p class="desc"><b>for...in</b> 把每个 key 轮流取出来，再用 obj[key] 拿到值；<b>Object.keys()</b> 直接拿到所有 key 组成的数组。</p>
+            <div class="objbox" id="box5">
+                <div class="obj-name">var scores = { 语文: 92, 数学: 88, 英语: 95 }</div>
+                <div class="pairs" id="pairs5"></div>
+            </div>
+            <div class="code"><span class="k">for</span> (<span class="k">var</span> key <span class="k">in</span> scores) {
+  console.log(key, scores[key]);
+}
+Object.<span class="p">keys</span>(scores);    <span class="c">// ["语文","数学","英语"]</span>
+Object.<span class="p">values</span>(scores);  <span class="c">// [92, 88, 95]</span></div>
+            <div class="res" id="res5">
+                <button class="btn" data-demo="5">逐个遍历</button>
+            </div>
+        </div>
+
+        <!-- 6. 原型链 -->
+        <div class="card wide">
+            <div class="card-head">
+                <h2>对象是怎么来的：原型链</h2>
+                <span class="tag green">__proto__</span>
+            </div>
+            <p class="desc">
+                自己身上没有的属性，会沿着原型链一层层往上找：实例 → 构造函数.prototype → Object.prototype → null。
+                所以一个普通对象才有 <b>toString()</b>、<b>hasOwnProperty()</b> 这些"白送"的方法。
+            </p>
+            <div class="chain" id="chain">
+                <div class="node">student<br><span style="color:#a99372">name: "周雨欣"</span></div>
+                <span class="arrow">→</span>
+                <div class="node">Student.prototype<br><span style="color:#a99372">major: "信息管理"</span></div>
+                <span class="arrow">→</span>
+                <div class="node">Object.prototype<br><span style="color:#a99372">toString / hasOwnProperty</span></div>
+                <span class="arrow">→</span>
+                <div class="node">null</div>
+            </div>
+            <div class="code">student.major;          <span class="c">// 自己身上没有 → 去 prototype 找到</span>
+student.toString;       <span class="c">// 再往上 → Object.prototype 找到</span>
+student.notExist;       <span class="c">// 一路找不到 → undefined</span>
+
+<span class="c">// 判断属性是"自己的"还是"继承来的"</span>
+student.<span class="p">hasOwnProperty</span>(<span class="s">"name"</span>);   <span class="c">// true</span>
+student.<span class="p">hasOwnProperty</span>(<span class="s">"major"</span>);  <span class="c">// false</span></div>
+            <div class="res" id="res6">
+                <button class="btn" data-demo="6">沿着原型链查找</button>
+            </div>
+        </div>
+
+        <!-- 7. 常用 API -->
+        <div class="card wide">
+            <div class="card-head">
+                <h2>对象的常用工具方法</h2>
+                <span class="tag blue">Object.*</span>
+            </div>
+            <p class="desc">Object 是一个"工具箱"对象，里面装着一堆用来操作其他对象的静态方法。</p>
+            <div class="mini-grid">
+                <div class="mini">
+                    <h4>Object.keys()</h4>
+                    <div class="line">取所有键名<br><b style="color:#d94f2b">["name","age","major"]</b></div>
+                </div>
+                <div class="mini">
+                    <h4>Object.values()</h4>
+                    <div class="line">取所有值<br><b style="color:#d94f2b">["周雨欣",20,"信息管理"]</b></div>
+                </div>
+                <div class="mini">
+                    <h4>Object.entries()</h4>
+                    <div class="line">键值对数组<br><b style="color:#d94f2b">[["name","周雨欣"], …]</b></div>
+                </div>
+                <div class="mini">
+                    <h4>Object.assign()</h4>
+                    <div class="line">合并对象<br><b style="color:#d94f2b">{...a, ...b}</b></div>
+                </div>
+                <div class="mini">
+                    <h4>Object.freeze()</h4>
+                    <div class="line">冻结，禁止修改<br><b style="color:#d94f2b">改不动了</b></div>
+                </div>
+                <div class="mini">
+                    <h4>JSON.stringify()</h4>
+                    <div class="line">对象 → 字符串<br><b style="color:#d94f2b">'{"name":"…"}'</b></div>
+                </div>
+            </div>
+            <div class="code"><span class="k">var</span> o = { name: <span class="s">"周雨欣"</span>, age: <span class="s">20</span> };
+Object.<span class="p">keys</span>(o);         <span class="c">// ["name", "age"]</span>
+Object.<span class="p">values</span>(o);       <span class="c">// ["周雨欣", 20]</span>
+Object.<span class="p">entries</span>(o);      <span class="c">// [["name","周雨欣"], ["age",20]]</span>
+Object.<span class="p">assign</span>({}, o, { age: <span class="s">21</span> });  <span class="c">// 合并，后面覆盖前面</span>
+JSON.<span class="p">stringify</span>(o);    <span class="c">// '{"name":"周雨欣","age":20}'</span></div>
+            <div class="res" id="res7">
+                <button class="btn" data-demo="7">在控制台算一遍</button>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>属性是抽屉里的东西，方法是抽屉上的把手 —— this 就是"你正在拉的那个抽屉"。</footer>
+
+    <script>
+        /* ================= 通用工具 ================= */
+        function makePair(k, v, cls) {
+            var p = document.createElement("div");
+            p.className = "pair" + (cls ? " " + cls : "");
+            p.setAttribute("data-key", k);
+            p.style.opacity = "1";   // 覆盖 .removed 的透明，可反复演示
+            var kk = document.createElement("span");
+            kk.className = "pk";
+            kk.textContent = k;
+            var vv = document.createElement("span");
+            vv.className = "pv";
+            vv.textContent = v;
+            p.appendChild(kk);
+            p.appendChild(vv);
+            return p;
+        }
+
+        function renderPairs(el, obj, cls) {
+            el.innerHTML = "";
+            for (var key in obj) {
+                el.appendChild(makePair(key, obj[key], cls));
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(function (r) { setTimeout(r, ms); });
+        }
+
+        /* ================= 1. 对象的本质 ================= */
+        var student = { name: "周雨欣", age: 20, major: "信息管理" };
+        var pairs1 = document.getElementById("pairs1");
+        var res1 = document.getElementById("res1");
+        var box1 = document.getElementById("box1");
+        renderPairs(pairs1, student);
+
+        function runDemo1() {
+            var pairs = pairs1.querySelectorAll(".pair");
+            var i = 0;
+            box1.classList.add("playing");
+            var timer = setInterval(function () {
+                if (i > 0) pairs[i - 1].classList.remove("active");
+                if (i >= pairs.length) {
+                    clearInterval(timer);
+                    box1.classList.remove("playing");
+                    showRes(res1, 'student.name → "周雨欣"');
+                    return;
+                }
+                pairs[i].classList.add("active");
+                i++;
+            }, 500);
+        }
+
+        /* ================= 2. 属性 vs 方法 ================= */
+        var res2 = document.getElementById("res2");
+        function runDemo2() {
+            var props = document.getElementById("props").querySelectorAll(".slot");
+            var metas = document.getElementById("metas").querySelectorAll(".slot");
+            var all = [];
+            for (var i = 0; i < props.length; i++) all.push(props[i]);
+            for (var j = 0; j < metas.length; j++) all.push(metas[j]);
+            var i2 = 0;
+            var timer = setInterval(function () {
+                if (i2 > 0) all[i2 - 1].classList.remove("active");
+                if (i2 >= all.length) {
+                    clearInterval(timer);
+                    // 方法被调用：高亮变绿并展示返回值
+                    metas[0].classList.add("hit");
+                    metas[0].textContent = 'study() → "周雨欣 在学习"';
+                    setTimeout(function () {
+                        metas[1].classList.add("hit");
+                        metas[1].textContent = 'sayHi() → "你好呀"';
+                        showRes(res2, '方法加括号才能拿到结果：<b>"周雨欣 在学习"</b>');
+                    }, 500);
+                    return;
+                }
+                all[i2].classList.add("active");
+                i2++;
+            }, 420);
+        }
+        function resetDemo2() {
+            document.getElementById("props").innerHTML =
+                '<div class="slot">name: "周雨欣"</div>' +
+                '<div class="slot">age: 20</div>' +
+                '<div class="slot">major: "信息管理"</div>';
+            document.getElementById("metas").innerHTML =
+                '<div class="slot">study()</div>' +
+                '<div class="slot">sayHi()</div>';
+            clearRes(res2);
+        }
+
+        /* ================= 3. 增删改查 ================= */
+        var book = { title: "JavaScript", price: 59 };
+        var pairs3 = document.getElementById("pairs3");
+        var res3 = document.getElementById("res3");
+        var box3 = document.getElementById("box3");
+        renderPairs(pairs3, book);
+        var bookInit = { title: "JavaScript", price: 59 };
+
+        async function runDemo3() {
+            box3.classList.add("playing");
+
+            // 增
+            await sleep(400);
+            var p1 = makePair("author", "周雨欣", "added");
+            pairs3.appendChild(p1);
+            showRes(res3, "① 增：book.author = 周雨欣");
+            await sleep(900);
+            p1.classList.remove("added");
+
+            // 改
+            var pricePair = pairs3.querySelector('[data-key="price"]');
+            pricePair.classList.add("active");
+            showRes(res3, "② 改：book.price = 49");
+            await sleep(500);
+            pricePair.querySelector(".pv").textContent = "49";
+            await sleep(500);
+            pricePair.classList.remove("active");
+
+            // 删
+            var titlePair = pairs3.querySelector('[data-key="title"]');
+            showRes(res3, "③ 删：delete book.title");
+            await sleep(250);
+            titlePair.classList.add("removed");
+            await sleep(450);
+            if (titlePair.parentNode) titlePair.remove();
+
+            // 查
+            var authorPair = pairs3.querySelector('[data-key="author"]');
+            authorPair.classList.add("active");
+            showRes(res3, "④ 查：book.author → <b>周雨欣</b>");
+            await sleep(700);
+            authorPair.classList.remove("active");
+            box3.classList.remove("playing");
+        }
+
+        function resetDemo3() {
+            renderPairs(pairs3, bookInit);
+            clearRes(res3);
+            box3.classList.remove("playing");
+        }
+
+        /* ================= 4. this ================= */
+        var res4 = document.getElementById("res4");
+        var thisVal = document.getElementById("thisVal");
+        function runDemo4() {
+            var who = document.querySelector("#thisbox .who");
+            var person = {
+                name: "周雨欣",
+                intro: function () { return "我是" + this.name; }
+            };
+            who.classList.add("active");
+            thisVal.textContent = "person";
+            showRes(res4, "this 指向 person");
+            setTimeout(function () {
+                var result = person.intro();
+                showRes(res4, 'person.intro() → <b>"' + result + '"</b>');
+                setTimeout(function () {
+                    who.classList.remove("active");
+                    thisVal.textContent = "?";
+                }, 1200);
+            }, 800);
+        }
+
+        /* ================= 5. 遍历 ================= */
+        var scores = { "语文": 92, "数学": 88, "英语": 95 };
+        var pairs5 = document.getElementById("pairs5");
+        var res5 = document.getElementById("res5");
+        var box5 = document.getElementById("box5");
+        renderPairs(pairs5, scores);
+
+        function runDemo5() {
+            var pairs = pairs5.querySelectorAll(".pair");
+            var i = 0;
+            box5.classList.add("playing");
+            var timer = setInterval(function () {
+                if (i > 0) pairs[i - 1].classList.remove("active");
+                if (i >= pairs.length) {
+                    clearInterval(timer);
+                    box5.classList.remove("playing");
+                    showRes(res5, 'Object.keys() → <b>["语文","数学","英语"]</b>');
+                    return;
+                }
+                pairs[i].classList.add("active");
+                i++;
+            }, 550);
+        }
+
+        /* ================= 6. 原型链 ================= */
+        var res6 = document.getElementById("res6");
+        async function runDemo6() {
+            var nodes = document.querySelectorAll("#chain .node");
+            // 第一层：自己身上找到
+            nodes[0].classList.add("active");
+            showRes(res6, "student.name：在自己身上直接找到");
+            await sleep(900);
+            nodes[0].classList.remove("active");
+
+            // 第二层：prototype 上找到
+            nodes[0].classList.add("active");
+            showRes(res6, "student.major：自己身上没有 → 往上找 prototype");
+            await sleep(600);
+            nodes[1].classList.add("active");
+            showRes(res6, 'Student.prototype.major → "信息管理"');
+            await sleep(1000);
+            nodes[0].classList.remove("active");
+            nodes[1].classList.remove("active");
+
+            // 第三层：Object.prototype
+            nodes[0].classList.add("active");
+            showRes(res6, "student.toString：继续往上找 Object.prototype");
+            await sleep(600);
+            nodes[2].classList.add("active");
+            showRes(res6, "在 Object.prototype 找到 toString()");
+            await sleep(1000);
+            nodes[0].classList.remove("active");
+            nodes[2].classList.remove("active");
+
+            // 找不到
+            nodes[0].classList.add("active");
+            showRes(res6, "student.notExist：一路找到 null 都没有 → undefined");
+            await sleep(700);
+            nodes[3].classList.add("active");
+            await sleep(700);
+            nodes[3].classList.remove("active");
+            nodes[0].classList.remove("active");
+            showRes(res6, "结论：undefined，并<b>不会</b>报错");
+        }
+
+        /* ================= 7. Object API ================= */
+        var res7 = document.getElementById("res7");
+        async function runDemo7() {
+            var o = { name: "周雨欣", age: 20 };
+            var steps = [
+                ['Object.keys(o)', JSON.stringify(Object.keys(o))],
+                ['Object.values(o)', JSON.stringify(Object.values(o))],
+                ['Object.entries(o)', JSON.stringify(Object.entries(o))],
+                ['Object.assign({}, o, {age:21})', JSON.stringify(Object.assign({}, o, { age: 21 }))],
+                ['JSON.stringify(o)', JSON.stringify(o)]
+            ];
+            for (var i = 0; i < steps.length; i++) {
+                showRes(res7, steps[i][0] + "() → <b>" + steps[i][1] + "</b>");
+                await sleep(900);
+            }
+        }
+
+        /* ================= 结果区辅助 ================= */
+        function showRes(box, html) {
+            var old = box.querySelectorAll(".res-text");
+            for (var i = 0; i < old.length; i++) old[i].remove();
+            var span = document.createElement("span");
+            span.className = "res-text";
+            span.innerHTML = html;
+            box.appendChild(span);
+        }
+        function clearRes(box) {
+            var old = box.querySelectorAll(".res-text");
+            for (var i = 0; i < old.length; i++) old[i].remove();
+        }
+
+        /* ================= 事件绑定（带防抖） ================= */
+        var busy = {};
+        var runners = {
+            "1": runDemo1,
+            "2": runDemo2,
+            "3": runDemo3,
+            "4": runDemo4,
+            "5": runDemo5,
+            "6": runDemo6,
+            "7": runDemo7
+        };
+
+        document.addEventListener("click", function (e) {
+            var btn = e.target.closest("button");
+            if (!btn) return;
+
+            var id = btn.getAttribute("data-demo");
+            if (id) {
+                if (busy[id]) return;
+                busy[id] = true;
+                // 每次重跑前先复位自己的状态，保证可以反复观看
+                if (id === "1") { renderPairs(pairs1, student); clearRes(res1); }
+                if (id === "2") { resetDemo2(); }
+                if (id === "3") { resetDemo3(); }
+                if (id === "5") { clearRes(res5); }
+                Promise.resolve(runners[id]()).then(function () {
+                    busy[id] = false;
+                });
+                return;
+            }
+
+            var rid = btn.getAttribute("data-reset");
+            if (rid === "3") resetDemo3();
+        });
+    </script>
+</body>
+</html>
