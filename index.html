@@ -3,7 +3,7 @@
     作者：周雨欣
     建立时间：2026-11-02
     使用大模型：DeepSeek-V4.1-Flash
-    功能名称：个人作品集首页（新视觉 + 精选作品展示）
+    功能名称：个人作品集首页（全部作品索引）
 -->
 <html lang="zh-CN">
 <head>
@@ -18,11 +18,11 @@
         <div class="container nav-inner">
             <a class="logo" href="index.html">我的作品集</a>
             <nav class="nav-links" id="navLinks">
-                <a class="active" href="index.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.2 9.8V20h13.6V9.8"/><path d="M9.6 20v-5.2h4.8V20"/></svg>首页</a>
-                <a href="about.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20.5c0-3.4 3.1-5.9 7-5.9s7 2.5 7 5.9"/></svg>关于我</a>
-                <a href="works.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3.5 16.5 8.5 12l4 3.5" stroke="#4a90e2"/><circle cx="16" cy="9" r="1.5" fill="#4a90e2" stroke="none"/></svg>作品</a>
-                <a href="skill.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.6 20.6c3-1.1 4.9-3.5 4.9-6.6 0-4.4-3.6-8-8-8s-8 3.6-8 8c0 2.4 1.1 4.3 2.8 5.6v3"/><circle cx="12.6" cy="13" r="2.1"/><path d="M12.6 10.9v-1.3"/></svg>技能</a>
-                <a href="contact.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5.5h17v10.5H9.5L6 19.5v-3.5h-2.5z"/><circle cx="8.6" cy="10.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.8" r="1.1" fill="currentColor" stroke="none"/></svg>联系</a>
+                <a class="active" href="index.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.6 12 3.4l9 7.2"/><path d="M5.4 9.9V20h13.2V9.9"/><path d="M9.8 20v-5h4.4v5"/></svg>首页</a>
+                <a href="about.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.2" r="3.5"/><path d="M5.3 20.4c.6-3.5 3.4-5.9 6.7-5.9s6.1 2.4 6.7 5.9"/></svg>关于我</a>
+                <a href="works.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M3.4 16.8 8.6 12l3.8 3.4" stroke="#4a90e2"/><circle cx="15.8" cy="9.2" r="1.5" fill="#4a90e2" stroke="none"/></svg>作品</a>
+                <a href="skill.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.8 20.6c3-1.2 4.8-3.6 4.8-6.6 0-4.4-3.6-8-8-8s-8 3.6-8 8c0 2.4 1.1 4.3 2.9 5.7v3.1"/><circle cx="12.7" cy="12.9" r="2.2"/><path d="M12.7 10.7V9.2"/></svg>技能</a>
+                <a href="contact.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.8" width="18" height="13" rx="4"/><path d="M8.6 17.8v2.6l3.8-2.6"/><circle cx="8.8" cy="11.2" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="11.2" r="1.05" fill="currentColor" stroke="none"/><circle cx="15.2" cy="11.2" r="1.05" fill="currentColor" stroke="none"/></svg>联系</a>
             </nav>
             <div class="nav-actions">
                 <button id="themeToggle" aria-label="切换主题">🌗</button>
@@ -37,9 +37,9 @@
                 <div class="hero-text">
                     <p class="kicker">Portfolio · 2026</p>
                     <h1>你好，我是<br>周雨欣</h1>
-                    <p class="lead">前端爱好者 · 学习页面布局与交互 · 这是我的个人作品集</p>
+                    <p class="lead">前端学习者，喜欢把页面一点点拆开再做出来。这里收录了我全部的课程练习与作品。</p>
                     <div class="btn-row">
-                        <a class="btn btn-solid" href="works.html">查看作品</a>
+                        <a class="btn btn-solid" href="#all-works">浏览全部作品</a>
                         <a class="btn btn-ghost" href="contact.html">联系我</a>
                     </div>
                 </div>
@@ -53,51 +53,206 @@
             </div>
         </section>
 
-        <section class="section container reveal">
+        <section class="section container reveal" id="all-works">
             <div class="section-head">
                 <div>
-                    <p class="kicker">Selected Works</p>
-                    <h2>精选作品</h2>
+                    <p class="kicker">All Works · 29</p>
+                    <h2>全部作品</h2>
                 </div>
-                <a class="more" href="works.html">全部作品 →</a>
+                <a class="more" href="works.html">精选作品 →</a>
             </div>
 
-            <div class="works-showcase">
-                <a class="work-item" href="17-3.html">
-                    <span class="work-idx">01</span>
-                    <div class="work-body">
-                        <h3>商品列表与详情</h3>
-                        <p>调用远程接口获取商品数据，列表页与详情页联动展示，包含骨架屏与异常提示。</p>
-                        <div class="chips"><span>fetch</span><span>JSON</span><span>列表渲染</span></div>
-                    </div>
-                    <span class="work-arrow">↗</span>
+            <h3 class="group-title">01 · 结构与布局</h3>
+            <div class="all-grid">
+                <a class="all-item" href="2-2.html">
+                    <span class="no">01</span>
+                    <h3>HTML 基础结构</h3>
+                    <p>标题、段落、图片与列表的入门练习</p>
+                    <span class="file">2-2.html</span>
                 </a>
-                <a class="work-item" href="17-6.html">
-                    <span class="work-idx">02</span>
-                    <div class="work-body">
-                        <h3>包饺子的异步流程</h3>
-                        <p>用 Promise 与 async/await 演示并行等待：和面、和馅同时进行，页面实时显示每一步进度。</p>
-                        <div class="chips"><span>Promise</span><span>async/await</span><span>setTimeout</span></div>
-                    </div>
-                    <span class="work-arrow">↗</span>
+                <a class="all-item" href="4-1 css2.html">
+                    <span class="no">02</span>
+                    <h3>CSS2 基础</h3>
+                    <p>选择器、文字样式与页面配色</p>
+                    <span class="file">4-1 css2.html</span>
                 </a>
-                <a class="work-item" href="15-1.html">
-                    <span class="work-idx">03</span>
-                    <div class="work-body">
-                        <h3>数 7 的小盒子</h3>
-                        <p>一百个盒子按“数 7”规则自动留空，练习循环、条件判断与网格布局。</p>
-                        <div class="chips"><span>循环</span><span>条件判断</span><span>DOM</span></div>
-                    </div>
-                    <span class="work-arrow">↗</span>
+                <a class="all-item" href="5-2盒模型.html">
+                    <span class="no">03</span>
+                    <h3>盒子模型</span>
+                    <p>margin / border / padding 的实际效果</p>
+                    <span class="file">5-2盒模型.html</span>
                 </a>
-                <a class="work-item" href="14-1.html">
-                    <span class="work-idx">04</span>
-                    <div class="work-body">
-                        <h3>JavaScript 数据类型</h3>
-                        <p>用六张卡片演示 number、string、boolean、undefined、null、object 及其 typeof 结果。</p>
-                        <div class="chips"><span>数据类型</span><span>typeof</span><span>卡片布局</span></div>
-                    </div>
-                    <span class="work-arrow">↗</span>
+                <a class="all-item" href="6-1 flex.html">
+                    <span class="no">04</span>
+                    <h3>Flex 弹性布局</h3>
+                    <p>主轴、交叉轴与对齐方式练习</p>
+                    <span class="file">6-1 flex.html</span>
+                </a>
+                <a class="all-item" href="6-2.html">
+                    <span class="no">05</span>
+                    <h3>布局综合练习</h3>
+                    <p>多种方式实现经典页面结构</p>
+                    <span class="file">6-2.html</span>
+                </a>
+                <a class="all-item" href="7-1上图下文.html">
+                    <span class="no">06</span>
+                    <h3>上图下文排版</h3>
+                    <p>图片在上、文字在下的图文卡片</p>
+                    <span class="file">7-1上图下文.html</span>
+                </a>
+                <a class="all-item" href="7-2左图右文.html">
+                    <span class="no">07</span>
+                    <h3>左图右文排版</h3>
+                    <p>图片在左、文字在右的横向图文</p>
+                    <span class="file">7-2左图右文.html</span>
+                </a>
+                <a class="all-item" href="8-1 css3选择器.html">
+                    <span class="no">08</span>
+                    <h3>CSS3 选择器</h3>
+                    <p>属性选择器、伪类与组合选择器</p>
+                    <span class="file">8-1 css3选择器.html</span>
+                </a>
+            </div>
+
+            <h3 class="group-title">02 · 动画与响应式</h3>
+            <div class="all-grid">
+                <a class="all-item" href="9-1 transition.html">
+                    <span class="no">09</span>
+                    <h3>过渡效果 transition</h3>
+                    <p>hover 状态下的平滑过渡</p>
+                    <span class="file">9-1 transition.html</span>
+                </a>
+                <a class="all-item" href="10-1animation.html">
+                    <span class="no">10</span>
+                    <h3>CSS 关键帧动画</h3>
+                    <p>@keyframes 定义与循环播放</p>
+                    <span class="file">10-1animation.html</span>
+                </a>
+                <a class="all-item" href="10-2.html">
+                    <span class="no">11</span>
+                    <h3>幻灯片效果</h3>
+                    <p>页面式的切换与展示</p>
+                    <span class="file">10-2.html</span>
+                </a>
+                <a class="all-item" href="10-3.html">
+                    <span class="no">12</span>
+                    <h3>媒体查询</h3>
+                    <p>不同屏幕宽度下的样式切换</p>
+                    <span class="file">10-3.html</span>
+                </a>
+                <a class="all-item" href="10-4.html">
+                    <span class="no">13</span>
+                    <h3>响应式页面</h3>
+                    <p>多设备自适应的整体排版</p>
+                    <span class="file">10-4.html</span>
+                </a>
+            </div>
+
+            <h3 class="group-title">03 · 图标与 JavaScript 基础</h3>
+            <div class="all-grid">
+                <a class="all-item" href="13-1.html">
+                    <span class="no">14</span>
+                    <h3>Font Awesome 图标</h3>
+                    <p>用字体图标替代图片切图</p>
+                    <span class="file">13-1.html</span>
+                </a>
+                <a class="all-item" href="13-2.html">
+                    <span class="no">15</span>
+                    <h3>Lucide SVG 图标</h3>
+                    <p>SVG 图标库的引入与使用</p>
+                    <span class="file">13-2.html</span>
+                </a>
+                <a class="all-item" href="13-3.html">
+                    <span class="no">16</span>
+                    <h3>移动端底部导航</h3>
+                    <p>iconfont 搭建的手机底部栏</p>
+                    <span class="file">13-3.html</span>
+                </a>
+                <a class="all-item" href="14-1.html">
+                    <span class="no">17</span>
+                    <h3>数据类型</h3>
+                    <p>六种数据类型与 typeof 结果</p>
+                    <span class="file">14-1.html</span>
+                </a>
+                <a class="all-item" href="15-1.html">
+                    <span class="no">18</span>
+                    <h3>数 7 游戏</h3>
+                    <p>100 个盒子按数 7 规则留空</p>
+                    <span class="file">15-1.html</span>
+                </a>
+            </div>
+
+            <h3 class="group-title">04 · 对象与数据</h3>
+            <div class="all-grid">
+                <a class="all-item" href="16-1.html">
+                    <span class="no">19</span>
+                    <h3>数组常用方法</h3>
+                    <p>push、map、filter 等操作演练</p>
+                    <span class="file">16-1.html</span>
+                </a>
+                <a class="all-item" href="16-2.html">
+                    <span class="no">20</span>
+                    <h3>JavaScript 对象</h3>
+                    <p>属性、方法与遍历</p>
+                    <span class="file">16-2.html</span>
+                </a>
+                <a class="all-item" href="16-3.html">
+                    <span class="no">21</span>
+                    <h3>翻译平台侧边栏</h3>
+                    <p>数据驱动的侧边导航渲染</p>
+                    <span class="file">16-3.html</span>
+                </a>
+                <a class="all-item" href="16-4.html">
+                    <span class="no">22</span>
+                    <h3>新车上市页面</h3>
+                    <p>用对象数组生成车型展示</p>
+                    <span class="file">16-4.html</span>
+                </a>
+                <a class="all-item" href="17-1.html">
+                    <span class="no">23</span>
+                    <h3>JSON 数据格式</h3>
+                    <p>JSON 语法、stringify 与 parse</p>
+                    <span class="file">17-1.html</span>
+                </a>
+            </div>
+
+            <h3 class="group-title">05 · 接口与异步</h3>
+            <div class="all-grid">
+                <a class="all-item" href="17-2.html">
+                    <span class="no">24</span>
+                    <h3>fetch 请求接口</h3>
+                    <p>随机小狗图片接口的数据展示</p>
+                    <span class="file">17-2.html</span>
+                </a>
+                <a class="all-item" href="17-3.html">
+                    <span class="no">25</span>
+                    <h3>商品列表</h3>
+                    <p>dummyjson 商品数据的列表渲染</p>
+                    <span class="file">17-3.html</span>
+                </a>
+                <a class="all-item" href="17-3-detail.html">
+                    <span class="no">26</span>
+                    <h3>商品详情</h3>
+                    <p>按商品 ID 获取单条详情</p>
+                    <span class="file">17-3-detail.html</span>
+                </a>
+                <a class="all-item" href="17-4.html">
+                    <span class="no">27</span>
+                    <h3>接口测试工具</h3>
+                    <p>GET / POST 等方法与错误提示</p>
+                    <span class="file">17-4.html</span>
+                </a>
+                <a class="all-item" href="17-5.html">
+                    <span class="no">28</span>
+                    <h3>JavaScript 定时器</h3>
+                    <p>setTimeout 与 setInterval 演示</p>
+                    <span class="file">17-5.html</span>
+                </a>
+                <a class="all-item" href="17-6.html">
+                    <span class="no">29</span>
+                    <h3>异步流程</h3>
+                    <p>Promise 与 async/await 包饺子</p>
+                    <span class="file">17-6.html</span>
                 </a>
             </div>
         </section>
