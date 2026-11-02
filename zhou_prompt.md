@@ -34,3 +34,6 @@
 
 ### 2026-11-02 ｜ 17-4.html
 > 完成17-4.htm，对远程数据接口进行测试，支持get、post等，显示返回的数据和猎误提示信息 示例post接口:`https://jsonplaceholder.typicade.com/posts`
+
+### 2026-11-02 ｜ 17-5.html
+> 完成17-5.html ，展示javascript的两种定时器。
