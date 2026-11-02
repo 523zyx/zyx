@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-02
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：Promise 与 async/await 异步流程演示（包饺子）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-6 Promise 异步流程：包饺子</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 36px 20px 60px;
+            color: #333;
+        }
+        .wrap {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #84806f;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: #ece5d4;
+            color: #8a4429;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+
+        /* ---------- 控制栏 ---------- */
+        .bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+        .timer {
+            font-size: 13px;
+            color: #777;
+        }
+        .timer b {
+            font-family: Consolas, monospace;
+            font-size: 19px;
+            color: #d94f2b;
+            margin-left: 6px;
+        }
+        .btns { display: flex; gap: 9px; flex-wrap: wrap; }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 9px 22px;
+            border-radius: 22px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn:disabled { background: #ddd2b8; cursor: not-allowed; transform: none; }
+        .btn.ghost {
+            background: transparent;
+            color: #a99372;
+            border: 1px solid #ddd2b8;
+        }
+        .btn.ghost:hover { background: #f2ece0; color: #7a6a4d; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 18px;
+        }
+        @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 14px;
+            padding: 20px 22px;
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #c44569;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #f0dcd8;
+            display: inline-block;
+        }
+
+        /* ---------- 流程节点 ---------- */
+        .flow { position: relative; }
+        .node {
+            display: flex;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            margin-bottom: 10px;
+            transition: background .3s, border-color .3s, transform .3s;
+        }
+        .node .icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #ddd2b8;
+            background: #f4efe1;
+            color: #a99372;
+            font-size: 13px;
+            font-family: Consolas, monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all .3s;
+        }
+        .node .body { flex: 1; min-width: 0; }
+        .node .title {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #555;
+        }
+        .node .title .dur {
+            font-family: Consolas, monospace;
+            font-size: 11.5px;
+            color: #a99372;
+        }
+        .node .note {
+            font-size: 12px;
+            color: #a99372;
+            margin-top: 3px;
+        }
+        .node .status {
+            font-size: 12px;
+            font-family: Consolas, monospace;
+            color: #a99372;
+            margin-top: 6px;
+        }
+        .track {
+            height: 5px;
+            background: #eee6d3;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #ff9a76, #d94f2b);
+        }
+
+        /* 运行中 */
+        .node.running {
+            background: #fdf3ec;
+            border-color: #f5d6c6;
+        }
+        .node.running .icon {
+            border-color: #d94f2b;
+            color: #d94f2b;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        .node.running .status { color: #d94f2b; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(217, 79, 43, .35); }
+            50% { box-shadow: 0 0 0 6px rgba(217, 79, 43, 0); }
+        }
+        /* 完成 */
+        .node.done {
+            background: #f2f7ea;
+            border-color: #dbe8c8;
+        }
+        .node.done .icon {
+            background: #7fa650;
+            border-color: #7fa650;
+            color: #fff;
+        }
+        .node.done .status { color: #557a2f; }
+        .node.done .fill { background: #7fa650; }
+
+        /* 并行分支 */
+        .parallel {
+            margin: 0 0 10px 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative;
+        }
+        .parallel .node { margin-bottom: 0; }
+        .parallel-label {
+            margin-left: 40px;
+            font-size: 11.5px;
+            font-family: Consolas, monospace;
+            color: #a99372;
+            margin-bottom: 8px;
+        }
+        @media (max-width: 560px) {
+            .parallel { grid-template-columns: 1fr; margin-left: 20px; }
+            .parallel-label { margin-left: 20px; }
+        }
+
+        /* ---------- 日志 ---------- */
+        .log {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.85;
+            padding: 14px 16px;
+            border-radius: 10px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log .t { color: #7f8798; }
+        .log .g { color: #b5e08a; }
+        .log .o { color: #ffd479; }
+        .log .r { color: #ff9a76; }
+        .log::-webkit-scrollbar { width: 6px; }
+        .log::-webkit-scrollbar-thumb {
+            background: #565d6b;
+            border-radius: 3px;
+        }
+
+        /* ---------- 代码 ---------- */
+        .codecard { margin-top: 18px; }
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.2px;
+            line-height: 1.75;
+            padding: 14px 16px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        .code .k { color: #8fd0ff; }
+        .code .s { color: #b5e08a; }
+        .code .f { color: #ffd479; }
+        .code .c { color: #8b95a5; }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 26px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>用 Promise 与 async/await 演示包饺子</h1>
+        <p class="sub">
+            买原料 → 取原料 → <code>Promise.all</code> 同时和面、和馅 → 包饺子 → 吃饺子
+            <br>每个步骤用 <code>setTimeout</code> 包装成 Promise 来模拟耗时
+        </p>
+
+        <div class="bar">
+            <div class="timer">总耗时<b id="totalTime">0.0s</b></div>
+            <div class="btns">
+                <button class="btn" id="startBtn">开始包饺子</button>
+                <button class="btn ghost" id="resetBtn">重置</button>
+            </div>
+        </div>
+
+        <div class="grid">
+
+            <!-- 流程 -->
+            <div class="card">
+                <h2>制作流程</h2>
+                <div class="flow">
+
+                    <div class="node" id="n-buy">
+                        <div class="icon">1</div>
+                        <div class="body">
+                            <div class="title"><span>买原料</span><span class="dur">6.0s</span></div>
+                            <div class="note">去菜市场买面粉、猪肉、白菜</div>
+                            <div class="status">等待中</div>
+                            <div class="track"><div class="fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="node" id="n-take">
+                        <div class="icon">2</div>
+                        <div class="body">
+                            <div class="title"><span>取原料</span><span class="dur">2.0s</span></div>
+                            <div class="note">把买回来的原料拿进厨房、拆袋</div>
+                            <div class="status">等待中</div>
+                            <div class="track"><div class="fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="parallel-label">以下两步同时进行（Promise.all）</div>
+                    <div class="parallel">
+                        <div class="node" id="n-dough">
+                            <div class="icon">3a</div>
+                            <div class="body">
+                                <div class="title"><span>和面</span><span class="dur">3.0s</span></div>
+                                <div class="status">等待中</div>
+                                <div class="track"><div class="fill"></div></div>
+                            </div>
+                        </div>
+                        <div class="node" id="n-filling">
+                            <div class="icon">3b</div>
+                            <div class="body">
+                                <div class="title"><span>和馅</span><span class="dur">2.5s</span></div>
+                                <div class="status">等待中</div>
+                                <div class="track"><div class="fill"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="node" id="n-wrap">
+                        <div class="icon">4</div>
+                        <div class="body">
+                            <div class="title"><span>包饺子</span><span class="dur">3.0s</span></div>
+                            <div class="note">面醒好了、馅拌好了，开始一个个包</div>
+                            <div class="status">等待中</div>
+                            <div class="track"><div class="fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="node" id="n-eat">
+                        <div class="icon">5</div>
+                        <div class="body">
+                            <div class="title"><span>吃饺子</span><span class="dur">1.5s</span></div>
+                            <div class="note">下锅煮熟，开吃</div>
+                            <div class="status">等待中</div>
+                             <div class="track"><div class="fill"></div></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 日志 -->
+            <div class="card">
+                <h2>执行日志</h2>
+                <div class="log" id="log">// 点击「开始包饺子」查看每一步的执行顺序</div>
+            </div>
+
+        </div>
+
+        <!-- 代码 -->
+        <div class="card codecard">
+            <h2>对应的代码</h2>
+            <div class="code"><span class="c">// 1. 把 setTimeout 包装成 Promise，才能 await</span>
+<span class="k">function</span> <span class="f">wait</span>(ms) {
+  <span class="k">return new</span> Promise(<span class="k">function</span> (resolve) {
+    <span class="f">setTimeout</span>(resolve, ms);
+  });
+}
+
+<span class="c">// 2. 用 async/await 按顺序写异步流程</span>
+<span class="k">async function</span> <span class="f">makeDumplings</span>() {
+  <span class="k">await</span> <span class="f">wait</span>(<span class="s">6000</span>);   <span class="c">// 买原料</span>
+  <span class="k">await</span> <span class="f">wait</span>(<span class="s">2000</span>);   <span class="c">// 取原料</span>
+
+  <span class="c">// 3. 并行的两步：Promise.all 等两者都完成</span>
+  <span class="k">await</span> Promise.<span class="f">all</span>([
+    <span class="f">wait</span>(<span class="s">3000</span>),   <span class="c">// 和面</span>
+    <span class="f">wait</span>(<span class="s">2500</span>)    <span class="c">// 和馅</span>
+  ]);
+
+  <span class="k">await</span> <span class="f">wait</span>(<span class="s">3000</span>);   <span class="c">// 包饺子</span>
+  <span class="k">await</span> <span class="f">wait</span>(<span class="s">1500</span>);   <span class="c">// 吃饺子</span>
+}</div>
+        </div>
+
+        <footer>顺序执行用 await 排队，能同时做的事用 Promise.all 并行 —— 总耗时从 18s 缩短到 15.5s。</footer>
+    </div>
+
+    <script>
+        var DURATIONS = {
+            buy: 6000,
+            take: 2000,
+            dough: 3000,
+            filling: 2500,
+            wrap: 3000,
+            eat: 1500
+        };
+
+        var NAMES = {
+            buy: "买原料",
+            take: "取原料",
+            dough: "和面",
+            filling: "和馅",
+            wrap: "包饺子",
+            eat: "吃饺子"
+        };
+
+        var logBox = document.getElementById("log");
+        var totalTime = document.getElementById("totalTime");
+        var startBtn = document.getElementById("startBtn");
+        var resetBtn = document.getElementById("resetBtn");
+
+        var runToken = 0;       // 用于中断上一次运行
+        var startTime = 0;
+        var clockId = null;
+
+        /* ---------- 工具 ---------- */
+
+        /* 把 setTimeout 包装成 Promise */
+        function wait(ms) {
+            return new Promise(function (resolve) {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        function nodeOf(key) {
+            return document.getElementById("n-" + key);
+        }
+
+        function pad(n) {
+            return n < 10 ? "0" + n : String(n);
+        }
+
+        /* 以开始时间为基准的 mm:ss.s 时间戳 */
+        function stamp() {
+            var t = Date.now() - startTime;
+            var sec = Math.floor(t / 1000);
+            var tenth = Math.floor((t % 1000) / 100);
+            return "[" + pad(Math.floor(sec / 60)) + ":" + pad(sec % 60) + "." + tenth + "]";
+        }
+
+        function log(text, cls) {
+            var line = '<span class="t">' + stamp() + "</span> " +
+                (cls ? '<span class="' + cls + '">' + text + "</span>" : text);
+            if (logBox.innerHTML.indexOf("//") !== -1 && logBox.children.length === 0) {
+                logBox.innerHTML = "";
+            }
+            logBox.innerHTML += line + "\n";
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        /* 把一个节点标记为运行中：状态文字 + 进度条动画 */
+        function markRunning(key, ms) {
+            var node = nodeOf(key);
+            node.classList.remove("done");
+            node.classList.add("running");
+            node.querySelector(".status").textContent = "进行中…";
+            node.querySelector(".icon").textContent = "…";
+
+            var fill = node.querySelector(".fill");
+            fill.style.transition = "none";
+            fill.style.width = "0%";
+            void fill.offsetWidth;
+            fill.style.transition = "width " + ms + "ms linear";
+            fill.style.width = "100%";
+
+            log(NAMES[key] + " 开始（预计 " + (ms / 1000).toFixed(1) + "s）", "o");
+        }
+
+        function markDone(key) {
+            var node = nodeOf(key);
+            node.classList.remove("running");
+            node.classList.add("done");
+            node.querySelector(".status").textContent = "已完成 ✓";
+            node.querySelector(".icon").textContent = "✓";
+            var fill = node.querySelector(".fill");
+            fill.style.transition = "none";
+            fill.style.width = "100%";
+            log(NAMES[key] + " 完成 ✓", "g");
+        }
+
+        /* 执行一个步骤：标运行 → 等待 → 标完成 */
+        async function step(key, token) {
+            var ms = DURATIONS[key];
+            markRunning(key, ms);
+            await wait(ms);
+            if (token !== runToken) return false;   // 已被重置，中断
+            markDone(key);
+            return true;
+        }
+
+        /* ---------- 核心：串联整个流程 ---------- */
+        async function makeDumplings() {
+            var token = ++runToken;
+            startTime = Date.now();
+
+            // 计时器：不断刷新总耗时
+            clockId = setInterval(function () {
+                totalTime.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+            }, 100);
+
+            log("开始：准备包饺子", "o");
+
+            await step("buy", token);
+            if (token !== runToken) return;
+
+            await step("take", token);
+            if (token !== runToken) return;
+
+            // 并行的两步：两个 Promise 同时开始，Promise.all 等最慢的那个
+            log("开始并行：和面 + 和馅", "o");
+            await Promise.all([
+                step("dough", token),
+                step("filling", token)
+            ]);
+            if (token !== runToken) return;
+            log("和面、和馅都完成了，可以包了", "g");
+
+            await step("wrap", token);
+            if (token !== runToken) return;
+
+            await step("eat", token);
+            if (token !== runToken) return;
+
+            // 结束
+            clearInterval(clockId);
+            clockId = null;
+            var cost = ((Date.now() - startTime) / 1000).toFixed(1);
+            totalTime.textContent = cost + "s";
+            log("全部完成！可以吃了，总耗时 " + cost + "s", "g");
+            startBtn.disabled = false;
+        }
+
+        /* ---------- 重置 ---------- */
+        function resetAll() {
+            runToken++;             // 让正在进行的流程失效
+            if (clockId) clearInterval(clockId);
+            clockId = null;
+
+            ["buy", "take", "dough", "filling", "wrap", "eat"].forEach(function (key) {
+                var node = nodeOf(key);
+                node.classList.remove("running", "done");
+                node.querySelector(".status").textContent = "等待中";
+                var icon = node.querySelector(".icon");
+                if (key === "dough") icon.textContent = "3a";
+                else if (key === "filling") icon.textContent = "3b";
+                else if (key === "buy") icon.textContent = "1";
+                else if (key === "take") icon.textContent = "2";
+                else if (key === "wrap") icon.textContent = "4";
+                else icon.textContent = "5";
+
+                var fill = node.querySelector(".fill");
+                fill.style.transition = "none";
+                fill.style.width = "0%";
+            });
+
+            totalTime.textContent = "0.0s";
+            logBox.innerHTML = "// 点击「开始包饺子」查看每一步的执行顺序";
+            startBtn.disabled = false;
+        }
+
+        startBtn.addEventListener("click", function () {
+            resetAll();             // 先清空上一次
+            startBtn.disabled = true;
+            makeDumplings();
+        });
+
+        resetBtn.addEventListener("click", function () {
+            resetAll();
+        });
+    </script>
+</body>
+</html>
