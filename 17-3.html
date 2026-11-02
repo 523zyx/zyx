@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-02
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：商品列表页（fetch 请求 dummyjson 商品接口）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-3 商品列表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+            color: #333;
+        }
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #84806f;
+            line-height: 1.8;
+            margin-bottom: 26px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: #ece5d4;
+            color: #8a4429;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+
+        /* ---------- 顶部工具条 ---------- */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+        .meta {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #777;
+        }
+        .meta b {
+            color: #d94f2b;
+            font-family: Consolas, monospace;
+            margin-left: 4px;
+        }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn:disabled {
+            background: #ddd2b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ---------- 商品网格 ---------- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(226px, 1fr));
+            gap: 18px;
+        }
+        .item {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform .28s ease, box-shadow .28s ease, border-color .28s;
+            animation: fadeUp .45s ease backwards;
+        }
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 22px rgba(180, 160, 120, .22);
+            border-color: #ddd2b8;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pic {
+            position: relative;
+            height: 196px;
+            background: #f4efe1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 12px;
+            transition: transform .4s ease;
+        }
+        .item:hover .pic img { transform: scale(1.06); }
+        .cat {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            background: #fff;
+            color: #8a4429;
+            font-size: 11px;
+            font-family: Consolas, monospace;
+            padding: 3px 10px;
+            border-radius: 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+        }
+        .discount {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 11px;
+            font-family: Consolas, monospace;
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+        .info {
+            padding: 14px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .info h3 {
+            font-size: 14.5px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+            min-height: 44px;
+        }
+        .brand {
+            font-size: 12px;
+            color: #a99372;
+            margin-bottom: 10px;
+        }
+        .rate {
+            font-size: 13px;
+            color: #d9a23b;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .rate span {
+            color: #a99372;
+            font-size: 12px;
+            font-family: Consolas, monospace;
+            letter-spacing: 0;
+            margin-left: 4px;
+        }
+        .price {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-top: auto;
+            margin-bottom: 12px;
+        }
+        .price .now {
+            font-family: Consolas, monospace;
+            font-size: 19px;
+            font-weight: bold;
+            color: #d94f2b;
+        }
+        .price .old {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: #b0a795;
+            text-decoration: line-through;
+        }
+        .go {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            font-size: 13px;
+            color: #8a4429;
+            background: #f4efe1;
+            border: 1px solid #e2d8c2;
+            border-radius: 20px;
+            padding: 8px 0;
+            transition: background .25s, color .25s, border-color .25s;
+        }
+        .go:hover {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+        }
+
+        /* ---------- 骨架屏 ---------- */
+        .sk {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .sk .bar {
+            background: linear-gradient(90deg, #f2ece0 25%, #faf7ee 37%, #f2ece0 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.3s ease infinite;
+        }
+        .sk .p { height: 196px; }
+        .sk .l { height: 12px; border-radius: 6px; margin: 12px 16px 0; }
+        .sk .l.s { width: 50%; }
+        .sk .l.m { width: 78%; }
+        @keyframes shimmer {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        /* ---------- 状态提示 ---------- */
+        .state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: #fdfbf4;
+            border: 1px dashed #e2d8c2;
+            border-radius: 12px;
+            color: #a99372;
+            font-size: 13.5px;
+            line-height: 2;
+        }
+        .state .err {
+            color: #b93f1f;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>商品列表</h1>
+        <p class="sub">数据来自接口 <code>https://dummyjson.com/products?limit=8</code>，点击卡片查看详情</p>
+
+        <div class="toolbar">
+            <div class="meta">
+                <span>接口返回总数：<b id="mTotal">—</b></span>
+                <span>本页条数：<b id="mCount">—</b></span>
+                <span>耗时：<b id="mTime">—</b></span>
+            </div>
+            <button class="btn" id="btnReload">重新请求</button>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <footer>列表页只拿"摘要"，详情页再按 id 请求完整数据 —— 这是最常见的列表 + 详情结构。</footer>
+    </div>
+
+    <script>
+        var API = "https://dummyjson.com/products?limit=8";
+
+        var grid = document.getElementById("grid");
+        var mTotal = document.getElementById("mTotal");
+        var mCount = document.getElementById("mCount");
+        var mTime = document.getElementById("mTime");
+        var btnReload = document.getElementById("btnReload");
+
+        var loading = false;
+
+        /* 骨架屏：请求期间先占位，避免页面空白 */
+        function showSkeleton() {
+            var html = "";
+            for (var i = 0; i < 8; i++) {
+                html +=
+                    '<div class="sk">' +
+                        '<div class="bar p"></div>' +
+                        '<div class="bar l m"></div>' +
+                        '<div class="bar l s"></div>' +
+                        '<div class="bar l m" style="margin-bottom:16px"></div>' +
+                    '</div>';
+            }
+            grid.innerHTML = html;
+        }
+
+        /* 星级：2.56 → ★★☆ 半星用 ☆ 简化表示 */
+        function stars(rating) {
+            var full = Math.round(rating);
+            var s = "";
+            for (var i = 1; i <= 5; i++) {
+                s += i <= full ? "★" : "☆";
+            }
+            return s;
+        }
+
+        /* 原价 = 现价 / (1 - 折扣率) */
+        function oldPrice(price, discount) {
+            var origin = price / (1 - discount / 100);
+            return origin.toFixed(2);
+        }
+
+        function render(list) {
+            grid.innerHTML = "";
+            list.forEach(function (p, index) {
+                var a = document.createElement("a");
+                a.className = "item";
+                a.href = "17-3-detail.html?id=" + p.id;
+                a.style.animationDelay = (index * 60) + "ms";
+
+                a.innerHTML =
+                    '<div class="pic">' +
+                        '<span class="cat">' + p.category + '</span>' +
+                        '<span class="discount">-' + Math.round(p.discountPercentage) + '%</span>' +
+                        '<img src="' + p.thumbnail + '" alt="' + p.title + '">' +
+                    '</div>' +
+                    '<div class="info">' +
+                        '<h3>' + p.title + '</h3>' +
+                        '<span class="brand">' + (p.brand || "无品牌") + '</span>' +
+                        '<span class="rate">' + stars(p.rating) +
+                            '<span>' + p.rating.toFixed(1) + '</span></span>' +
+                        '<div class="price">' +
+                            '<span class="now">$' + p.price.toFixed(2) + '</span>' +
+                            '<span class="old">$' + oldPrice(p.price, p.discountPercentage) + '</span>' +
+                        '</div>' +
+                        '<span class="go">查看详情 →</span>' +
+                    '</div>';
+
+                grid.appendChild(a);
+            });
+        }
+
+        function showError(err) {
+            grid.innerHTML =
+                '<div class="state">' +
+                    '请求失败 😢<br>' +
+                    '<span class="err">' + err.name + ': ' + err.message + '</span><br>' +
+                    '请检查网络后点右上角「重新请求」' +
+                '</div>';
+        }
+
+        /* ================= 核心：fetch 商品列表 ================= */
+        async function loadProducts() {
+            if (loading) return;
+            loading = true;
+            btnReload.disabled = true;
+            btnReload.textContent = "请求中…";
+            mTotal.textContent = "—";
+            mCount.textContent = "—";
+            mTime.textContent = "—";
+            showSkeleton();
+
+            var start = Date.now();
+
+            try {
+                var res = await fetch(API);
+                // fetch 对 4xx/5xx 不会 reject，要自己判断
+                if (!res.ok) throw new Error("HTTP " + res.status);
+
+                var data = await res.json();
+
+                mTime.textContent = (Date.now() - start) + " ms";
+                mTotal.textContent = data.total;
+                mCount.textContent = data.products.length;
+
+                render(data.products);
+            } catch (err) {
+                showError(err);
+            } finally {
+                loading = false;
+                btnReload.disabled = false;
+                btnReload.textContent = "重新请求";
+            }
+        }
+
+        btnReload.addEventListener("click", loadProducts);
+
+        /* 打开页面自动加载 */
+        loadProducts();
+    </script>
+</body>
+</html>

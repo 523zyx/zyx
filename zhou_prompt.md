@@ -22,3 +22,12 @@
 
 ### 2026-10-29 ｜ 16-4.html
 > 完成16-4.html,使用的图标在font目录里选，完成的网页尽可能的和给定的图片相似，要可以点
+
+### 2026-11-02 ｜ 17-1.html
+> 完成17-1.html，展示json
+
+### 2026-11-02 ｜ 17-2.html
+> 完成17-2.html，获取一个接口的数据并展示，接口可以跨域访问，使用fetch和原生代码实现`https://dog.ceo/api/breeds/image/random`
+
+### 2026-11-02 ｜ 17-3.html / 17-3-detail.html
+> 完成17-3.html 和17-3-detail.html，显示列表和列表详情，数据来源于接口，使用fetch。列表:`https://dummyjson.com/products?limit=8`，默认商品列表。详情:`https://dummyjson.com/products/1`，根据 ID 获取单个商品

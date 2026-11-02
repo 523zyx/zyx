@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-02
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：JSON 数据格式可视化演示
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-1 JSON 数据格式</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .rule {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 34px;
+        }
+        .wrap {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 460px);
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card.wide {
+            grid-column: 1 / -1;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .card-head h2 {
+            font-size: 17px;
+        }
+        .tag {
+            display: inline-block;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: Consolas, monospace;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+        }
+        .tag.blue { background: #4a7fa5; }
+        .tag.green { background: #7fa650; }
+        .desc {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+        .desc b { color: #d94f2b; }
+
+        /* ---------- JSON 语法着色 ---------- */
+        .jsonview,
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.75;
+            padding: 12px 14px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 14px;
+            overflow-x: auto;
+        }
+        .jkey  { color: #8fd0ff; }
+        .jstr  { color: #b5e08a; }
+        .jnum  { color: #ffd479; }
+        .jbool { color: #c9a7f5; }
+        .jnull { color: #9aa4b2; }
+        .punc  { color: #7d8798; }
+        .cmt   { color: #8b95a5; }
+
+        /* ---------- 图例 ---------- */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .chip {
+            font-size: 12px;
+            font-family: Consolas, monospace;
+            padding: 5px 11px;
+            border-radius: 20px;
+            border: 1px solid #e2d8c2;
+            background: #f4efe1;
+            color: #6b6152;
+        }
+        .chip .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .dot.d1 { background: #4a9ad8; }
+        .dot.d2 { background: #7fa650; }
+        .dot.d3 { background: #d9a23b; }
+        .dot.d4 { background: #9a6ec9; }
+        .dot.d5 { background: #8b95a5; }
+
+        /* ---------- 规则对照 ---------- */
+        .rules {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            margin-bottom: 14px;
+        }
+        .rule-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #5c5445;
+        }
+        .rule-row .mark {
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .rule-row code {
+            font-family: Consolas, monospace;
+            background: #ece5d4;
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #8a4429;
+        }
+        .rule-row .bad {
+            text-decoration: line-through;
+            color: #b0a795;
+            text-decoration-color: #d94f2b;
+        }
+
+        /* ---------- 序列化 ---------- */
+        .stage {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+            transition: border-color .3s, background .3s;
+        }
+        .stage.playing {
+            background: #fbf3e4;
+            border-color: #d94f2b;
+        }
+        .pairs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .pair {
+            background: #fdfbf4;
+            border: 1px solid #e2d8c2;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 92px;
+        }
+        .pair .pk {
+            display: block;
+            font-size: 11px;
+            color: #a99372;
+            font-family: Consolas, monospace;
+            margin-bottom: 2px;
+        }
+        .pair .pv {
+            font-size: 13.5px;
+            font-weight: bold;
+            color: #333;
+            word-break: break-all;
+        }
+        .seg {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .seg button {
+            border: 1px solid #ddd2b8;
+            background: #fdfbf4;
+            color: #6b6152;
+            font-size: 12.5px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: "Microsoft YaHei", sans-serif;
+            transition: all .25s;
+        }
+        .seg button:hover { background: #f2ece0; }
+        .seg button.on {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+        }
+
+        /* ---------- 解析输入 ---------- */
+        textarea {
+            width: 100%;
+            min-height: 168px;
+            resize: vertical;
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            border: 1px solid #3a3f4a;
+            border-radius: 8px;
+            padding: 12px 14px;
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color .25s;
+        }
+        textarea:focus { border-color: #d94f2b; }
+
+        /* ---------- 对比表 ---------- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-bottom: 14px;
+        }
+        th, td {
+            border: 1px solid #ece4d0;
+            padding: 9px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f4efe1;
+            color: #6b6152;
+            font-weight: normal;
+        }
+        td.ok { color: #557a2f; }
+        td.no { color: #b93f1f; }
+        td code {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+
+        /* ---------- 嵌套路径 ---------- */
+        .paths {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .paths button {
+            border: 1px solid #ddd2b8;
+            background: #fdfbf4;
+            color: #6b6152;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .25s;
+        }
+        .paths button:hover { background: #f2ece0; border-color: #d94f2b; color: #b93f1f; }
+
+        /* ---------- 表单 ---------- */
+        .form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .form label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 12px;
+            color: #a99372;
+        }
+        .form input {
+            border: 1px solid #ddd2b8;
+            background: #fdfbf4;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            color: #333;
+            outline: none;
+            transition: border-color .25s;
+        }
+        .form input:focus { border-color: #d94f2b; }
+
+        /* ---------- 结果区 / 按钮 ---------- */
+        .res {
+            margin-top: auto;
+            border-top: 1px dashed #ece4d0;
+            padding-top: 12px;
+            font-size: 13px;
+            color: #666;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .res b {
+            color: #d94f2b;
+            font-family: Consolas, monospace;
+        }
+        .res .err { color: #b93f1f; font-family: Consolas, monospace; font-size: 12px; }
+        .res .ok { color: #557a2f; font-family: Consolas, monospace; font-size: 12px; }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+            flex-shrink: 0;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn.ghost {
+            background: transparent;
+            color: #a99372;
+            border: 1px solid #ddd2b8;
+        }
+        .btn.ghost:hover { background: #f2ece0; color: #7a6a4d; }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 36px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON 数据格式</h1>
+    <p class="rule">JSON 是"写给程序看的文本格式"——它长得像 JS 对象，但规矩更严格。点按钮试试序列化和解析。</p>
+
+    <div class="wrap">
+
+        <!-- 1. JSON 长什么样 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>JSON 长什么样</h2>
+                <span class="tag">JSON</span>
+            </div>
+            <p class="desc">JSON（JavaScript Object Notation）用花括号装一组 <b>"键": 值</b>，用方括号装一串值。键名一定是双引号包裹的字符串。</p>
+            <div class="jsonview"><span class="punc">{</span>
+  <span class="jkey">"name"</span><span class="punc">:</span> <span class="jstr">"周雨欣"</span><span class="punc">,</span>
+  <span class="jkey">"age"</span><span class="punc">:</span> <span class="jnum">20</span><span class="punc">,</span>
+  <span class="jkey">"vip"</span><span class="punc">:</span> <span class="jbool">true</span><span class="punc">,</span>
+  <span class="jkey">"major"</span><span class="punc">:</span> <span class="jnull">null</span><span class="punc">,</span>
+  <span class="jkey">"scores"</span><span class="punc">:</span> <span class="punc">[</span><span class="jnum">92</span><span class="punc">,</span> <span class="jnum">88</span><span class="punc">]</span>
+<span class="punc">}</span></div>
+            <div class="legend">
+                <span class="chip"><span class="dot d1"></span>键 key</span>
+                <span class="chip"><span class="dot d2"></span>字符串</span>
+                <span class="chip"><span class="dot d3"></span>数字</span>
+                <span class="chip"><span class="dot d4"></span>布尔</span>
+                <span class="chip"><span class="dot d5"></span>null</span>
+            </div>
+        </div>
+
+        <!-- 2. 六种值类型 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>JSON 只认这六种值</h2>
+                <span class="tag blue">types</span>
+            </div>
+            <p class="desc">JSON 是跨语言的数据格式，所以值类型被压缩到最小集合，没有函数、没有 undefined、没有日期对象。</p>
+            <div class="jsonview"><span class="jstr">"字符串"</span>      <span class="cmt">// 双引号包裹</span>
+<span class="jnum">2026</span>            <span class="cmt">// 数字，不带引号</span>
+<span class="jbool">true</span> <span class="punc">/</span> <span class="jbool">false</span>   <span class="cmt">// 布尔，小写</span>
+<span class="jnull">null</span>            <span class="cmt">// 空值</span>
+<span class="punc">[</span>...<span class="punc">]</span>           <span class="cmt">// 数组 array</span>
+<span class="punc">{</span>...<span class="punc">}</span>           <span class="cmt">// 对象 object</span></div>
+            <div class="res">
+                <span>不支持：<b>undefined / 函数 / NaN / 注释</b></span>
+            </div>
+        </div>
+
+        <!-- 3. 语法红线 -->
+        <div class="card wide">
+            <div class="card-head">
+                <h2>JSON 的语法红线：写成这样才合法</h2>
+                <span class="tag green">syntax</span>
+            </div>
+            <p class="desc">JSON 比 JS 对象严格得多，下面五条踩中任何一条，<b>JSON.parse()</b> 就会直接报错。</p>
+            <div class="rules">
+                <div class="rule-row">
+                    <span class="mark">✅</span>
+                    <span>键名必须是双引号字符串 <code>"name"</code>；<span class="bad"><code>name</code> / <code>'name'</code></span> 都不行</span>
+                </div>
+                <div class="rule-row">
+                    <span class="mark">✅</span>
+                    <span>字符串也必须是双引号 <code>"前端"</code>；<span class="bad"><code>'前端'</code></span> 是单引号，不合法</span>
+                </div>
+                <div class="rule-row">
+                    <span class="mark">✅</span>
+                    <span>最后一个成员后面<b>不能有逗号</b>；<span class="bad"><code>"age": 20,}</code></span> 会报错</span>
+                </div>
+                <div class="rule-row">
+                    <span class="mark">✅</span>
+                    <span><b>不能写注释</b>；<span class="bad"><code>// 说明</code></span> 在 JSON 里不存在</span>
+                </div>
+                <div class="rule-row">
+                    <span class="mark">✅</span>
+                    <span>值只能是字符串、数字、布尔、null、数组、对象；<span class="bad"><code>function(){}</code> / <code>undefined</code></span> 不合法</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. JSON.stringify -->
+        <div class="card">
+            <div class="card-head">
+                <h2>序列化：JSON.stringify()</h2>
+                <span class="tag">stringify</span>
+            </div>
+            <p class="desc">把 <b>对象 / 数组</b> 变成 JSON 字符串，才能写进文件、发到服务器、存进 localStorage。</p>
+            <div class="stage" id="strStage">
+                <div class="pairs" id="strPairs"></div>
+                <div class="seg" id="indentSeg">
+                    <button data-indent="0" class="on">紧凑（无缩进）</button>
+                    <button data-indent="2">缩进 2 空格</button>
+                    <button data-indent="4">缩进 4 空格</button>
+                </div>
+            </div>
+            <div class="code" id="strOut"></div>
+            <div class="res">
+                <span>注意：<b>undefined</b> 和函数会在序列化时被悄悄删掉。</span>
+            </div>
+        </div>
+
+        <!-- 5. JSON.parse -->
+        <div class="card">
+            <div class="card-head">
+                <h2>解析：JSON.parse()</h2>
+                <span class="tag">parse</span>
+            </div>
+            <p class="desc">把 JSON 字符串还原成 <b>真正的 JS 对象</b>，之后就能用点语法取值了。格式错误会被 try...catch 抓住。</p>
+            <textarea id="parseInput">{
+  "name": "周雨欣",
+  "age": 20,
+  "tags": ["前端", "设计"]
+}</textarea>
+            <div class="seg" style="margin-bottom:12px;">
+                <button id="btnParse">解析这段 JSON</button>
+                <button id="btnBad">填入错误示例</button>
+                <button id="btnGood">恢复正确示例</button>
+            </div>
+            <div class="code" id="parseOut">等待解析…</div>
+            <div class="res" id="parseRes"></div>
+        </div>
+
+        <!-- 6. 对象 vs JSON -->
+        <div class="card">
+            <div class="card-head">
+                <h2>JS 对象 ≠ JSON</h2>
+                <span class="tag blue">compare</span>
+            </div>
+            <p class="desc">JSON 是<b>字符串</b>，JS 对象是<b>内存里的数据</b>。前者只能传输和存储，后者才能直接操作。</p>
+            <table>
+                <tr>
+                    <th style="width:30%">对比项</th>
+                    <th>JS 对象</th>
+                    <th>JSON 文本</th>
+                </tr>
+                <tr>
+                    <td>键名引号</td>
+                    <td class="ok">可省略</td>
+                    <td class="no">必须双引号</td>
+                </tr>
+                <tr>
+                    <td>字符串引号</td>
+                    <td class="ok">单 / 双 / 反引号</td>
+                    <td class="no">只能双引号</td>
+                </tr>
+                <tr>
+                    <td>函数 / undefined</td>
+                    <td class="ok">可以有</td>
+                    <td class="no">不允许</td>
+                </tr>
+                <tr>
+                    <td>注释</td>
+                    <td class="ok">可以写</td>
+                    <td class="no">不允许</td>
+                </tr>
+                <tr>
+                    <td>末尾逗号</td>
+                    <td class="ok">允许（部分引擎）</td>
+                    <td class="no">绝对不行</td>
+                </tr>
+                <tr>
+                    <td>用途</td>
+                    <td class="ok">代码里操作数据</td>
+                    <td class="ok">传输 / 存储</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 7. 嵌套取值 -->
+        <div class="card wide">
+            <div class="card-head">
+                <h2>嵌套结构：一层层往下取值</h2>
+                <span class="tag green">nested</span>
+            </div>
+            <p class="desc">真实接口的数据常常是对象里套数组、数组里再套对象。点击下面的路径，看值是怎么被一层层取出来的。</p>
+            <div class="jsonview"><span class="punc">{</span>
+  <span class="jkey">"school"</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="jkey">"name"</span><span class="punc">:</span> <span class="jstr">"第一中学"</span><span class="punc">,</span>
+    <span class="jkey">"classes"</span><span class="punc">:</span> <span class="punc">[</span>
+      <span class="punc">{</span> <span class="jkey">"id"</span><span class="punc">:</span> <span class="jnum">1</span><span class="punc">,</span> <span class="jkey">"teacher"</span><span class="punc">:</span> <span class="jstr">"李老师"</span><span class="punc">,</span> <span class="jkey">"students"</span><span class="punc">:</span> <span class="jnum">45</span> <span class="punc">},</span>
+      <span class="punc">{</span> <span class="jkey">"id"</span><span class="punc">:</span> <span class="jnum">2</span><span class="punc">,</span> <span class="jkey">"teacher"</span><span class="punc">:</span> <span class="jstr">"王老师"</span><span class="punc">,</span> <span class="jkey">"students"</span><span class="punc">:</span> <span class="jnum">42</span> <span class="punc">}</span>
+    <span class="punc">]</span>
+  <span class="punc">},</span>
+  <span class="jkey">"isPublic"</span><span class="punc">:</span> <span class="jbool">true</span>
+<span class="punc">}</span></div>
+            <div class="paths" id="paths">
+                <button data-path="school.name">school.name</button>
+                <button data-path="school.classes[0].students">school.classes[0].students</button>
+                <button data-path="school.classes[1].teacher">school.classes[1].teacher</button>
+                <button data-path="isPublic">isPublic</button>
+            </div>
+            <div class="res" id="pathRes"><span>点一个路径试试 →</span></div>
+        </div>
+
+        <!-- 8. 实际用途 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>实际用途：表单 ⇄ JSON</h2>
+                <span class="tag">round trip</span>
+            </div>
+            <p class="desc">把表单值打包成 JSON 字符串存起来，读取时再 parse 回对象填回表单 —— 这就是前后端和本地存储的基本套路。</p>
+            <div class="form">
+                <label>姓名 <input id="fName" type="text" value="周雨欣"></label>
+                <label>年龄 <input id="fAge" type="number" value="20"></label>
+                <label>城市 <input id="fCity" type="text" value="杭州"></label>
+                <label>爱好 <input id="fHobby" type="text" value="前端开发"></label>
+            </div>
+            <div class="code" id="formOut">点"生成 JSON"看看 👇</div>
+            <div class="res">
+                <button class="btn" id="btnGen">生成 JSON</button>
+                <button class="btn ghost" id="btnFill">还原成表单</button>
+                <span id="formRes"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>JSON 只是"文本"：写的时候要守规矩，读的时候用 JSON.parse 变成对象才能用。</footer>
+
+    <script>
+        /* ================= 4. stringify ================= */
+        var person = {
+            name: "周雨欣",
+            age: 20,
+            tags: ["前端", "设计"],
+            vip: true
+        };
+
+        var strPairs = document.getElementById("strPairs");
+        var strOut = document.getElementById("strOut");
+        var indent = 0;
+
+        function renderPerson() {
+            strPairs.innerHTML = "";
+            for (var key in person) {
+                var pair = document.createElement("div");
+                pair.className = "pair";
+                var pk = document.createElement("span");
+                pk.className = "pk";
+                pk.textContent = '"' + key + '"';
+                var pv = document.createElement("span");
+                pv.className = "pv";
+                pv.textContent = Array.isArray(person[key])
+                    ? "[" + person[key].join(", ") + "]"
+                    : person[key];
+                pair.appendChild(pk);
+                pair.appendChild(pv);
+                strPairs.appendChild(pair);
+            }
+        }
+
+        function outputJSON() {
+            var text = JSON.stringify(person, null, indent);
+            // 简单着色，让输出更好读
+            strOut.innerHTML = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/"([^"]+)":/g, '<span class="jkey">"$1"</span>:')
+                .replace(/: ?"([^"]*)"/g, ': <span class="jstr">"$1"</span>')
+                .replace(/: ?(-?\d+(\.\d+)?)/g, ': <span class="jnum">$1</span>')
+                .replace(/: ?(true|false)/g, ': <span class="jbool">$1</span>');
+        }
+
+        renderPerson();
+        outputJSON();
+
+        document.getElementById("indentSeg").addEventListener("click", function (e) {
+            var btn = e.target.closest("button");
+            if (!btn) return;
+            indent = Number(btn.getAttribute("data-indent"));
+            var all = this.querySelectorAll("button");
+            for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+            btn.classList.add("on");
+            outputJSON();
+        });
+
+        /* ================= 5. parse ================= */
+        var parseInput = document.getElementById("parseInput");
+        var parseOut = document.getElementById("parseOut");
+        var parseRes = document.getElementById("parseRes");
+
+        var goodJSON = '{\n  "name": "周雨欣",\n  "age": 20,\n  "tags": ["前端", "设计"]\n}';
+        var badJSON = '{\n  name: "周雨欣",\n  age: 20,\n}';
+
+        function doParse() {
+            var text = parseInput.value;
+            try {
+                var obj = JSON.parse(text);
+                var keys = Object.keys(obj);
+                parseOut.innerHTML = JSON.stringify(obj, null, 2);
+                parseRes.innerHTML = '<span class="ok">✅ 解析成功，得到对象，共 ' +
+                    keys.length + ' 个键：' + keys.join("、") + '</span>';
+            } catch (err) {
+                parseOut.innerHTML = text;
+                parseRes.innerHTML = '<span class="err">❌ ' + err.name + '：' + err.message + '</span>';
+            }
+        }
+
+        document.getElementById("btnParse").addEventListener("click", doParse);
+        document.getElementById("btnBad").addEventListener("click", function () {
+            parseInput.value = badJSON;
+            doParse();
+        });
+        document.getElementById("btnGood").addEventListener("click", function () {
+            parseInput.value = goodJSON;
+            doParse();
+        });
+
+        /* ================= 7. 嵌套取值 ================= */
+        var schoolData = {
+            school: {
+                name: "第一中学",
+                classes: [
+                    { id: 1, teacher: "李老师", students: 45 },
+                    { id: 2, teacher: "王老师", students: 42 }
+                ]
+            },
+            isPublic: true
+        };
+
+        // "school.classes[0].students" → 逐层取值
+        function getByPath(obj, path) {
+            // 把 [0] 统一成 .0
+            var parts = path.replace(/\[(\d+)\]/g, ".$1").split(".");
+            var cur = obj;
+            for (var i = 0; i < parts.length; i++) {
+                if (cur === null || cur === undefined) return undefined;
+                cur = cur[parts[i]];
+            }
+            return cur;
+        }
+
+        document.getElementById("paths").addEventListener("click", function (e) {
+            var btn = e.target.closest("button");
+            if (!btn) return;
+            var path = btn.getAttribute("data-path");
+            var val = getByPath(schoolData, path);
+            var show = typeof val === "string" ? '"' + val + '"' : String(val);
+            var type = Array.isArray(val) ? "array" : typeof val;
+            document.getElementById("pathRes").innerHTML =
+                '<span>取值 <b>' + path + '</b> → <b>' + show + '</b>（类型：' + type + '）</span>';
+        });
+
+        /* ================= 8. 表单 ⇄ JSON ================= */
+        var fName = document.getElementById("fName");
+        var fAge = document.getElementById("fAge");
+        var fCity = document.getElementById("fCity");
+        var fHobby = document.getElementById("fHobby");
+        var formOut = document.getElementById("formOut");
+        var formRes = document.getElementById("formRes");
+        var savedJSON = "";
+
+        document.getElementById("btnGen").addEventListener("click", function () {
+            var data = {
+                name: fName.value,
+                age: Number(fAge.value),
+                city: fCity.value,
+                hobby: fHobby.value
+            };
+            savedJSON = JSON.stringify(data, null, 2);
+            formOut.innerHTML = savedJSON
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/"([^"]+)":/g, '<span class="jkey">"$1"</span>:')
+                .replace(/: ?"([^"]*)"/g, ': <span class="jstr">"$1"</span>')
+                .replace(/: ?(-?\d+(\.\d+)?)/g, ': <span class="jnum">$1</span>');
+            formRes.innerHTML = '<span class="ok">已生成 JSON 字符串 ✅</span>';
+        });
+
+        document.getElementById("btnFill").addEventListener("click", function () {
+            if (!savedJSON) {
+                formRes.innerHTML = '<span class="err">请先点"生成 JSON"</span>';
+                return;
+            }
+            try {
+                var data = JSON.parse(savedJSON);
+                fName.value = data.name;
+                fAge.value = data.age;
+                fCity.value = data.city;
+                fHobby.value = data.hobby;
+                formRes.innerHTML = '<span class="ok">已从 JSON 还原 ✅</span>';
+            } catch (err) {
+                formRes.innerHTML = '<span class="err">还原失败：' + err.message + '</span>';
+            }
+        });
+
+        /* 页面打开时先解析一次，展示默认效果 */
+        doParse();
+    </script>
+</body>
+</html>

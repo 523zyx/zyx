@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-02
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：使用 fetch 请求随机小狗图片接口并展示数据
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-2 fetch 请求接口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .rule {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 34px;
+        }
+        .rule code {
+            font-family: Consolas, monospace;
+            background: #ece5d4;
+            color: #8a4429;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+        .wrap {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 460px);
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 12px;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card.wide {
+            grid-column: 1 / -1;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .card-head h2 {
+            font-size: 17px;
+        }
+        .tag {
+            display: inline-block;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: Consolas, monospace;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+        }
+        .tag.blue { background: #4a7fa5; }
+        .tag.green { background: #7fa650; }
+        .desc {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+        .desc b { color: #d94f2b; }
+
+        /* ---------- 代码 / JSON ---------- */
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.75;
+            padding: 12px 14px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 14px;
+            overflow-x: auto;
+        }
+        .code .k { color: #8fd0ff; }
+        .code .s { color: #b5e08a; }
+        .code .f { color: #ffd479; }
+        .code .c { color: #8b95a5; }
+        .jkey { color: #8fd0ff; }
+        .jstr { color: #b5e08a; }
+        .jnum { color: #ffd479; }
+
+        /* ---------- 状态栏 ---------- */
+        .status {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .stat {
+            flex: 1;
+            min-width: 96px;
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .stat .label {
+            display: block;
+            font-size: 11px;
+            color: #a99372;
+            margin-bottom: 4px;
+        }
+        .stat .value {
+            font-family: Consolas, monospace;
+            font-size: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+        .stat .value.good { color: #557a2f; }
+        .stat .value.bad { color: #b93f1f; }
+
+        /* ---------- 图片区 ---------- */
+        .photo {
+            position: relative;
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 12px;
+            transition: border-color .3s, background .3s;
+        }
+        .photo.loading {
+            border-color: #d94f2b;
+            background: #fbf3e4;
+        }
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity .45s ease;
+        }
+        .photo img.show { opacity: 1; }
+        .photo .hint {
+            font-size: 13px;
+            color: #a99372;
+            text-align: center;
+            padding: 0 20px;
+            line-height: 1.8;
+        }
+        /* 加载动画 */
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #e2d8c2;
+            border-top-color: #d94f2b;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loadingbox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: #a99372;
+        }
+
+        /* ---------- 品种信息 ---------- */
+        .breed {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            min-height: 26px;
+        }
+        .breed .name {
+            font-family: Consolas, monospace;
+            color: #d94f2b;
+            font-weight: bold;
+        }
+        .counter {
+            font-size: 12px;
+            color: #a99372;
+        }
+
+        /* ---------- 历史缩略图 ---------- */
+        .history {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .history img {
+            width: 62px;
+            height: 62px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #fdfbf4;
+            box-shadow: 0 0 0 1px #e2d8c2;
+            flex-shrink: 0;
+            animation: pop .4s ease;
+        }
+        @keyframes pop {
+            0% { opacity: 0; transform: scale(.4); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ---------- 结果 / 按钮 ---------- */
+        .res {
+            margin-top: auto;
+            border-top: 1px dashed #ece4d0;
+            padding-top: 12px;
+            font-size: 13px;
+            color: #666;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .res .err {
+            color: #b93f1f;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+        .res .ok {
+            color: #557a2f;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+            flex-shrink: 0;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn:disabled {
+            background: #ddd2b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn.ghost {
+            background: transparent;
+            color: #a99372;
+            border: 1px solid #ddd2b8;
+        }
+        .btn.ghost:hover { background: #f2ece0; color: #7a6a4d; }
+
+        /* ---------- 步骤说明 ---------- */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .step {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .step .no {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            background: #d94f2b;
+            color: #fff;
+            font-size: 11px;
+            font-family: Consolas, monospace;
+            margin-bottom: 8px;
+        }
+        .step h4 {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        .step p {
+            font-size: 12px;
+            color: #8b8069;
+            line-height: 1.7;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 36px;
+        }
+    </style>
+</head>
+<body>
+    <h1>用 fetch 请求接口数据</h1>
+    <p class="rule">接口：<code>https://dog.ceo/api/breeds/image/random</code>（支持跨域，返回一张随机小狗图片的地址）</p>
+
+    <div class="wrap">
+
+        <!-- 1. 图片展示 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>拿到的数据长什么样</h2>
+                <span class="tag">GET</span>
+            </div>
+            <p class="desc">服务器返回的 JSON 只有两个字段：<b>message</b> 是图片地址，<b>status</b> 表示请求是否成功。</p>
+            <div class="photo" id="photo">
+                <span class="hint">点击下方的「获取小狗」<br>从接口拿到第一张图片</span>
+            </div>
+            <div class="breed">
+                <span>品种：<span class="name" id="breedName">—</span></span>
+                <span class="counter" id="counter">已请求 0 次</span>
+            </div>
+            <div class="history" id="history"></div>
+            <div class="res">
+                <button class="btn" id="btnFetch">获取小狗</button>
+                <span id="msg"></span>
+            </div>
+        </div>
+
+        <!-- 2. 响应数据 -->
+        <div class="card">
+            <div class="card-head">
+                <h2>接口返回的原始 JSON</h2>
+                <span class="tag blue">response</span>
+            </div>
+            <p class="desc">这就是 <b>res.json()</b> 解析出来的对象 —— 一个标准的 JSON 数据结构。</p>
+            <div class="status">
+                <div class="stat">
+                    <span class="label">HTTP 状态</span>
+                    <span class="value" id="statStatus">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">耗时</span>
+                    <span class="value" id="statTime">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">接口状态</span>
+                    <span class="value" id="statApi">—</span>
+                </div>
+            </div>
+            <div class="code" id="jsonOut">// 请求成功后，这里会显示接口返回的 JSON</div>
+            <div class="res">
+                <button class="btn ghost" id="btnCopy">复制图片地址</button>
+                <span id="copyMsg"></span>
+            </div>
+        </div>
+
+        <!-- 3. 三步流程 -->
+        <div class="card wide">
+            <div class="card-head">
+                <h2>fetch 请求的三步走</h2>
+                <span class="tag green">async / await</span>
+            </div>
+            <p class="desc">原生 fetch 返回的是一个 Promise，用 async/await 写起来像同步代码；注意 fetch 只有网络断了才 reject，<b>404/500 不会自动报错</b>，要自己判断 res.ok。</p>
+            <div class="steps">
+                <div class="step">
+                    <span class="no">1</span>
+                    <h4>发送请求</h4>
+                    <p><b>fetch(url)</b> 发出 GET 请求，拿到一个 Response 对象（此时还只是响应头）。</p>
+                </div>
+                <div class="step">
+                    <span class="no">2</span>
+                    <h4>检查状态</h4>
+                    <p><b>res.ok</b> 为 true 才算成功；也可以用 <b>res.status</b> 判断 200。</p>
+                </div>
+                <div class="step">
+                    <span class="no">3</span>
+                    <h4>解析数据</h4>
+                    <p><b>res.json()</b> 把响应体读成 JS 对象，这一步也是异步的。</p>
+                </div>
+            </div>
+            <div class="code"><span class="k">async function</span> <span class="f">getDog</span>() {
+  <span class="k">try</span> {
+    <span class="k">const</span> res = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">"https://dog.ceo/api/breeds/image/random"</span>);
+    <span class="k">if</span> (!res.ok) <span class="k">throw new</span> Error(<span class="s">"HTTP "</span> + res.status);   <span class="c">// 404/500 要自己判断</span>
+    <span class="k">const</span> data = <span class="k">await</span> res.<span class="f">json</span>();            <span class="c">// { message, status }</span>
+    console.<span class="f">log</span>(data.message);                  <span class="c">// 图片地址</span>
+  } <span class="k">catch</span> (err) {
+    console.<span class="f">log</span>(<span class="s">"请求失败："</span> + err.message);   <span class="c">// 断网 / 超时 / 跨域</span>
+  }
+}</div>
+        </div>
+
+    </div>
+
+    <footer>接口只负责"给数据"，页面负责"把数据摆好看" —— 这就是前后端分离的雏形。</footer>
+
+    <script>
+        var API = "https://dog.ceo/api/breeds/image/random";
+
+        var photo = document.getElementById("photo");
+        var breedName = document.getElementById("breedName");
+        var counter = document.getElementById("counter");
+        var history = document.getElementById("history");
+        var btnFetch = document.getElementById("btnFetch");
+        var msg = document.getElementById("msg");
+        var jsonOut = document.getElementById("jsonOut");
+        var statStatus = document.getElementById("statStatus");
+        var statTime = document.getElementById("statTime");
+        var statApi = document.getElementById("statApi");
+        var copyMsg = document.getElementById("copyMsg");
+        var btnCopy = document.getElementById("btnCopy");
+
+        var count = 0;
+        var lastUrl = "";
+        var loading = false;
+
+        /* 显示加载状态：按钮禁用 + 转圈 */
+        function setLoading(isLoading) {
+            loading = isLoading;
+            btnFetch.disabled = isLoading;
+            btnFetch.textContent = isLoading ? "请求中…" : "获取小狗";
+            if (isLoading) {
+                photo.className = "photo loading";
+                photo.innerHTML =
+                    '<div class="loadingbox"><div class="spinner"></div><span>正在请求接口…</span></div>';
+                msg.innerHTML = "";
+            }
+        }
+
+        /* 从图片地址里解析品种：.../breeds/hound-afghan/xxx.jpg */
+        function getBreed(url) {
+            var match = url.match(/breeds\/([^\/]+)\//);
+            if (!match) return "未知";
+            // hound-afghan → afghan hound
+            var parts = match[1].split("-");
+            return parts.reverse().join(" ");
+        }
+
+        /* 给 JSON 文本上色 */
+        function colorJSON(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/"([^"]+)":/g, '<span class="jkey">"$1"</span>:')
+                .replace(/: ?"([^"]*)"/g, ': <span class="jstr">"$1"</span>')
+                .replace(/: ?(-?\d+(\.\d+)?)/g, ': <span class="jnum">$1</span>');
+        }
+
+        /* ================= 核心：fetch 请求 ================= */
+        async function getDog() {
+            if (loading) return;
+            setLoading(true);
+            var start = Date.now();
+
+            try {
+                var res = await fetch(API);
+
+                // fetch 只有网络异常才 reject，HTTP 错误要手动判断
+                statStatus.textContent = res.status;
+                statStatus.className = "value " + (res.ok ? "good" : "bad");
+
+                if (!res.ok) throw new Error("HTTP " + res.status);
+
+                var data = await res.json();
+
+                statTime.textContent = (Date.now() - start) + " ms";
+                statTime.className = "value good";
+                statApi.textContent = data.status;
+                statApi.className = "value " + (data.status === "success" ? "good" : "bad");
+
+                // 原始 JSON 展示
+                jsonOut.innerHTML = colorJSON(JSON.stringify(data, null, 2));
+
+                if (data.status !== "success" || !data.message) {
+                    throw new Error("接口返回状态异常");
+                }
+
+                lastUrl = data.message;
+
+                // 图片：先加载好再淡入，避免白屏
+                var img = new Image();
+                img.alt = "随机小狗图片";
+                img.onload = function () {
+                    photo.className = "photo";
+                    photo.innerHTML = "";
+                    photo.appendChild(img);
+                    // 强制一次重排，让过渡动画生效
+                    void img.offsetWidth;
+                    img.classList.add("show");
+                    setLoading(false);
+                };
+                img.onerror = function () {
+                    photo.className = "photo";
+                    photo.innerHTML = '<span class="hint">图片加载失败，再点一次试试</span>';
+                    msg.innerHTML = '<span class="err">图片地址无法访问</span>';
+                    setLoading(false);
+                };
+                img.src = lastUrl;
+
+                // 品种 + 计数
+                breedName.textContent = getBreed(lastUrl);
+                count++;
+                counter.textContent = "已请求 " + count + " 次";
+
+                // 历史缩略图，最多保留 6 张
+                var thumb = document.createElement("img");
+                thumb.src = lastUrl;
+                thumb.alt = "历史图片";
+                history.insertBefore(thumb, history.firstChild);
+                while (history.children.length > 6) {
+                    history.removeChild(history.lastChild);
+                }
+
+                msg.innerHTML = '<span class="ok">✅ 请求成功</span>';
+            } catch (err) {
+                // 失败时也要把状态展示出来
+                statTime.textContent = (Date.now() - start) + " ms";
+                statTime.className = "value bad";
+                statApi.textContent = "error";
+                statApi.className = "value bad";
+                jsonOut.innerHTML =
+                    '<span class="c">// 请求失败\n// ' + err.name + ': ' + err.message + "</span>";
+                photo.className = "photo";
+                photo.innerHTML =
+                    '<span class="hint">请求失败 😢<br>' + err.message + '<br>检查网络或稍后重试</span>';
+                msg.innerHTML = '<span class="err">❌ ' + err.message + "</span>";
+                setLoading(false);
+            }
+        }
+
+        btnFetch.addEventListener("click", getDog);
+
+        /* ================= 复制图片地址 ================= */
+        btnCopy.addEventListener("click", async function () {
+            if (!lastUrl) {
+                copyMsg.innerHTML = '<span class="err">还没有图片地址</span>';
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(lastUrl);
+                copyMsg.innerHTML = '<span class="ok">✅ 已复制</span>';
+            } catch (e) {
+                copyMsg.innerHTML = '<span class="err">浏览器不允许复制，请手动选择</span>';
+            }
+            setTimeout(function () { copyMsg.innerHTML = ""; }, 2000);
+        });
+
+        /* 打开页面自动请求一次 */
+        getDog();
+    </script>
+</body>
+</html>
