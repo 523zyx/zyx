@@ -31,3 +31,6 @@
 
 ### 2026-11-02 ｜ 17-3.html / 17-3-detail.html
 > 完成17-3.html 和17-3-detail.html，显示列表和列表详情，数据来源于接口，使用fetch。列表:`https://dummyjson.com/products?limit=8`，默认商品列表。详情:`https://dummyjson.com/products/1`，根据 ID 获取单个商品
+
+### 2026-11-02 ｜ 17-4.html
+> 完成17-4.htm，对远程数据接口进行测试，支持get、post等，显示返回的数据和猎误提示信息 示例post接口:`https://jsonplaceholder.typicade.com/posts`

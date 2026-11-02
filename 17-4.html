@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-02
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：远程接口测试工具（支持 GET/POST/PUT/PATCH/DELETE，展示返回数据与错误提示）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-4 接口测试工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f7f3e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 36px 20px 60px;
+            color: #333;
+        }
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #84806f;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: #ece5d4;
+            color: #8a4429;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+
+        .card {
+            background: #fdfbf4;
+            border: 1px solid #ece4d0;
+            border-radius: 14px;
+            padding: 20px 22px;
+            margin-bottom: 18px;
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #c44569;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #f0dcd8;
+            display: inline-block;
+        }
+
+        /* ---------- 请求行 ---------- */
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        select, input, textarea {
+            font-family: "Microsoft YaHei", Consolas, monospace;
+            font-size: 13px;
+            border: 1px solid #e2d8c2;
+            background: #fff;
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #444;
+            outline: none;
+            transition: border-color .25s, box-shadow .25s;
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: #d94f2b;
+            box-shadow: 0 0 0 3px rgba(217, 79, 43, .12);
+        }
+        #method {
+            width: 116px;
+            font-family: Consolas, monospace;
+            font-weight: bold;
+            color: #d94f2b;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        #url {
+            flex: 1;
+            min-width: 240px;
+            font-family: Consolas, monospace;
+        }
+        .btn {
+            border: none;
+            background: #d94f2b;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13.5px;
+            padding: 10px 26px;
+            border-radius: 22px;
+            cursor: pointer;
+            transition: background .25s, transform .2s;
+            flex-shrink: 0;
+        }
+        .btn:hover { background: #b93f1f; }
+        .btn:active { transform: scale(.95); }
+        .btn:disabled { background: #ddd2b8; cursor: not-allowed; transform: none; }
+
+        /* ---------- 快捷预设 ---------- */
+        .quick {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .chip {
+            font-size: 12px;
+            font-family: Consolas, monospace;
+            background: #f4efe1;
+            border: 1px solid #e2d8c2;
+            color: #7a6a4d;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all .25s;
+        }
+        .chip:hover {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+        }
+
+        /* ---------- 请求头 / 请求体 ---------- */
+        .two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+        .field label {
+            display: block;
+            font-size: 12.5px;
+            color: #8b8069;
+            margin-bottom: 6px;
+        }
+        .field label b {
+            color: #a99372;
+            font-weight: normal;
+            font-family: Consolas, monospace;
+            margin-left: 4px;
+        }
+        .field textarea {
+            width: 100%;
+            min-height: 128px;
+            resize: vertical;
+            font-family: Consolas, monospace;
+            line-height: 1.65;
+        }
+        .field textarea:disabled {
+            background: #f4efe1;
+            color: #b0a795;
+            cursor: not-allowed;
+        }
+
+        /* ---------- 结果状态 ---------- */
+        .statusbar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        @media (max-width: 700px) { .statusbar { grid-template-columns: 1fr 1fr; } }
+        .stat {
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 9px 12px;
+        }
+        .stat .label {
+            display: block;
+            font-size: 11px;
+            color: #a99372;
+            margin-bottom: 3px;
+        }
+        .stat .value {
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            word-break: break-all;
+        }
+        .value.good { color: #557a2f; }
+        .value.bad { color: #b93f1f; }
+        .value.warn { color: #c07a12; }
+
+        /* ---------- 结果标签页 ---------- */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            font-size: 12.5px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #e2d8c2;
+            background: #f4efe1;
+            color: #7a6a4d;
+            cursor: pointer;
+            transition: all .25s;
+        }
+        .tab.on {
+            background: #d94f2b;
+            border-color: #d94f2b;
+            color: #fff;
+        }
+
+        .code {
+            background: #3a3f4a;
+            color: #e8e6e3;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.75;
+            padding: 14px 16px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 380px;
+            overflow: auto;
+            margin-bottom: 10px;
+        }
+        .code .k { color: #8fd0ff; }
+        .code .s { color: #b5e08a; }
+        .code .n { color: #ffd479; }
+        .code .c { color: #8b95a5; }
+
+        .hlist {
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.9;
+            color: #6b6152;
+            background: #f4efe1;
+            border: 1px dashed #ddd2b8;
+            border-radius: 10px;
+            padding: 12px 14px;
+            max-height: 380px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ---------- 错误提示 ---------- */
+        .alert {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 12.8px;
+            line-height: 1.8;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .alert.show { display: flex; }
+        .alert.error {
+            background: #fdeeea;
+            border: 1px solid #f3c6b8;
+            color: #a8391c;
+        }
+        .alert.warn {
+            background: #fdf6e3;
+            border: 1px solid #f0dfb2;
+            color: #8a6412;
+        }
+        .alert .ic { font-size: 16px; flex-shrink: 0; }
+        .alert b { display: block; margin-bottom: 2px; }
+        .alert code {
+            font-family: Consolas, monospace;
+            background: rgba(0, 0, 0, .06);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #a99e88;
+            margin-top: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>远程接口测试工具</h1>
+        <p class="sub">
+            示例接口：<code>https://jsonplaceholder.typicode.com/posts</code>
+            （原题地址中的 typicade 为拼写错误，正确域名是 typicode）
+        </p>
+
+        <!-- 请求配置 -->
+        <div class="card">
+            <h2>请求配置</h2>
+            <div class="row">
+                <select id="method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+                <input id="url" type="text" value="https://jsonplaceholder.typicode.com/posts" placeholder="请输入接口地址">
+                <button class="btn" id="send">发送请求</button>
+            </div>
+
+            <div class="quick">
+                <span class="chip" data-preset="getList">GET 列表</span>
+                <span class="chip" data-preset="getOne">GET 单条</span>
+                <span class="chip" data-preset="post">POST 新建</span>
+                <span class="chip" data-preset="put">PUT 更新</span>
+                <span class="chip" data-preset="delete">DELETE 删除</span>
+                <span class="chip" data-preset="http404">HTTP 404</span>
+                <span class="chip" data-preset="netErr">网络错误</span>
+            </div>
+
+            <div class="two">
+                <div class="field">
+                    <label>请求头 Headers <b>每行一个 Key: Value</b></label>
+                    <textarea id="headers">Content-Type: application/json
+Accept: application/json</textarea>
+                </div>
+                <div class="field">
+                    <label>请求体 Body <b>GET / DELETE 不使用</b></label>
+                    <textarea id="body">{
+  "title": "周雨欣的接口测试",
+  "body": "这是 POST 提交的数据",
+  "userId": 1
+}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 响应结果 -->
+        <div class="card">
+            <h2>响应结果</h2>
+            <div class="statusbar">
+                <div class="stat">
+                    <span class="label">HTTP 状态</span>
+                    <span class="value" id="stCode">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">状态文本</span>
+                    <span class="value" id="stText">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">耗时</span>
+                    <span class="value" id="stTime">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">数据大小</span>
+                    <span class="value" id="stSize">—</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <span class="tab on" data-tab="body">响应数据</span>
+                <span class="tab" data-tab="headers">响应头</span>
+                <span class="tab" data-tab="request">请求信息</span>
+            </div>
+
+            <div class="code" id="out">// 点击「发送请求」，这里会显示接口返回的数据</div>
+            <div class="hlist" id="hlist" style="display:none">—</div>
+
+            <div class="alert error" id="errBox">
+                <span class="ic">⚠️</span>
+                <div id="errText"></div>
+            </div>
+            <div class="alert warn" id="warnBox">
+                <span class="ic">ℹ️</span>
+                <div id="warnText"></div>
+            </div>
+        </div>
+
+        <footer>接口测试的核心：看状态码是否 2xx、看返回体结构、看错误原因。</footer>
+    </div>
+
+    <script>
+        var method = document.getElementById("method");
+        var urlInput = document.getElementById("url");
+        var headersInput = document.getElementById("headers");
+        var bodyInput = document.getElementById("body");
+        var sendBtn = document.getElementById("send");
+
+        var stCode = document.getElementById("stCode");
+        var stText = document.getElementById("stText");
+        var stTime = document.getElementById("stTime");
+        var stSize = document.getElementById("stSize");
+
+        var out = document.getElementById("out");
+        var hlist = document.getElementById("hlist");
+        var errBox = document.getElementById("errBox");
+        var errText = document.getElementById("errText");
+        var warnBox = document.getElementById("warnBox");
+        var warnText = document.getElementById("warnText");
+
+        var currentTab = "body";
+        var rawHeaders = "";
+        var rawBody = "";
+        var requestInfo = "";
+        var loading = false;
+
+        /* ================= 工具函数 ================= */
+
+        /* 转义 HTML，防止接口返回的内容破坏页面 */
+        function esc(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        /* JSON 语法着色 */
+        function colorJSON(text) {
+            return esc(text)
+                .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+                .replace(/: ?"([^"]*)"/g, ': <span class="s">"$1"</span>')
+                .replace(/: ?(-?\d+(\.\d+)?)/g, ': <span class="n">$1</span>')
+                .replace(/\b(true|false|null)\b/g, '<span class="n">$1</span>');
+        }
+
+        function showError(title, detail) {
+            errBox.className = "alert error show";
+            errText.innerHTML = "<b>" + esc(title) + "</b>" + esc(detail);
+        }
+        function hideError() {
+            errBox.className = "alert error";
+        }
+        function showWarn(title, detail) {
+            warnBox.className = "alert warn show";
+            warnText.innerHTML = "<b>" + esc(title) + "</b>" + esc(detail);
+        }
+        function hideWarn() {
+            warnBox.className = "alert warn";
+        }
+        function resetStats() {
+            stCode.textContent = "—";
+            stCode.className = "value";
+            stText.textContent = "—";
+            stText.className = "value";
+            stTime.textContent = "—";
+            stTime.className = "value";
+            stSize.textContent = "—";
+            stSize.className = "value";
+        }
+
+        /* 把 "Key: Value" 的文本解析成对象 */
+        function parseHeaders(text) {
+            var result = {};
+            text.split("\n").forEach(function (line) {
+                line = line.trim();
+                if (!line) return;
+                var index = line.indexOf(":");
+                if (index <= 0) {
+                    throw new Error('请求头格式错误：' + line + '（应为 Key: Value）');
+                }
+                var key = line.slice(0, index).trim();
+                var value = line.slice(index + 1).trim();
+                result[key] = value;
+            });
+            return result;
+        }
+
+        /* 根据请求方法决定 body 是否可用 */
+        function syncBodyState() {
+            var hasBody = ["POST", "PUT", "PATCH"].indexOf(method.value) !== -1;
+            bodyInput.disabled = !hasBody;
+        }
+
+        /* ================= 切换标签页 ================= */
+        var tabs = document.querySelectorAll(".tab");
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                currentTab = tab.getAttribute("data-tab");
+                tabs.forEach(function (t) { t.classList.remove("on"); });
+                tab.classList.add("on");
+                renderTab();
+            });
+        });
+
+        function renderTab() {
+            out.style.display = currentTab === "body" ? "block" : "none";
+            hlist.style.display = currentTab === "headers" ? "block" : "none";
+
+            if (currentTab === "body") {
+                out.innerHTML = rawBody || '<span class="c">// 暂无响应数据</span>';
+            } else if (currentTab === "headers") {
+                hlist.textContent = rawHeaders || "暂无响应头";
+            } else {
+                out.style.display = "block";
+                out.innerHTML = requestInfo || '<span class="c">// 暂无请求信息</span>';
+            }
+        }
+
+        /* ================= 发送请求（核心） ================= */
+        async function sendRequest() {
+            if (loading) return;
+
+            var url = urlInput.value.trim();
+            if (!url) {
+                showError("地址为空", "请先填写接口地址。");
+                return;
+            }
+            if (!/^http(s)?:\/\//i.test(url)) {
+                showError("地址格式错误", "接口地址必须以 http:// 或 https:// 开头。");
+                return;
+            }
+
+            // 请求头校验
+            var headers;
+            try {
+                headers = parseHeaders(headersInput.value);
+            } catch (e) {
+                showError("请求头解析失败", e.message);
+                return;
+            }
+
+            var hasBody = ["POST", "PUT", "PATCH"].indexOf(method.value) !== -1;
+            var bodyText = hasBody ? bodyInput.value.trim() : "";
+
+            // 如果声明了 JSON 但内容不是合法 JSON，提前提示
+            if (hasBody && bodyText && /json/i.test(headers["Content-Type"] || "")) {
+                try {
+                    JSON.parse(bodyText);
+                } catch (e) {
+                    showWarn("请求体不是合法 JSON",
+                        "仍然会发送，但服务器可能返回 400。错误：" + e.message);
+                }
+            }
+
+            // 组装请求信息（用于「请求信息」标签页）
+            requestInfo =
+                '<span class="k">' + method.value + "</span> " + esc(url) + "\n\n" +
+                '<span class="c">// 请求头</span>\n' +
+                (Object.keys(headers).length
+                    ? Object.keys(headers).map(function (k) {
+                        return esc(k) + ": " + esc(headers[k]);
+                    }).join("\n")
+                    : "（无）") +
+                (hasBody ? "\n\n" + '<span class="c">// 请求体</span>\n' + esc(bodyText || "（空）") : "");
+
+            loading = true;
+            sendBtn.disabled = true;
+            sendBtn.textContent = "请求中…";
+            resetStats();
+            hideError();
+            hideWarn();
+            out.innerHTML = '<span class="c">// 正在发送 ' + method.value + " 请求…</span>";
+            hlist.textContent = "—";
+
+            var start = Date.now();
+
+            // 15 秒超时
+            var controller = new AbortController();
+            var timer = setTimeout(function () { controller.abort(); }, 15000);
+
+            try {
+                var res = await fetch(url, {
+                    method: method.value,
+                    headers: headers,
+                    body: hasBody && bodyText ? bodyText : undefined,
+                    signal: controller.signal
+                });
+
+                var cost = Date.now() - start;
+                clearTimeout(timer);
+
+                stCode.textContent = res.status;
+                stText.textContent = res.statusText || "—";
+                stTime.textContent = cost + " ms";
+
+                /* 状态码判断：2xx 成功，3xx 重定向，4xx 客户端错误，5xx 服务端错误 */
+                if (res.status >= 200 && res.status < 300) {
+                    stCode.className = "value good";
+                    stText.className = "value good";
+                } else if (res.status >= 400) {
+                    stCode.className = "value bad";
+                    stText.className = "value bad";
+                } else {
+                    stCode.className = "value warn";
+                    stText.className = "value warn";
+                }
+
+                // 响应头文本
+                var arr = [];
+                res.headers.forEach(function (value, key) {
+                    arr.push(key + ": " + value);
+                });
+                rawHeaders = arr.join("\n");
+
+                // 读取响应体（先当文本读，才能兼容非 JSON 的情况）
+                var text = await res.text();
+                stSize.textContent = text.length ? (text.length / 1024).toFixed(1) + " KB" : "0 KB";
+
+                rawBody = "";
+                if (!text) {
+                    rawBody = '<span class="c">// 该接口没有返回内容（常见于 204 或 DELETE 成功）</span>';
+                } else {
+                    try {
+                        var json = JSON.parse(text);
+                        rawBody = colorJSON(JSON.stringify(json, null, 2));
+                    } catch (e) {
+                        // 不是 JSON，按纯文本显示
+                        rawBody = esc(text);
+                        showWarn("返回内容不是 JSON", "已按纯文本显示，可能是 HTML 错误页。");
+                    }
+                }
+
+                renderTab();
+
+                // HTTP 错误提示（fetch 对 4xx/5xx 不会 reject，必须自己判断）
+                if (!res.ok) {
+                    showError(
+                        "HTTP " + res.status + " " + (res.statusText || "") + "：请求未成功",
+                        res.status === 404
+                            ? "接口不存在，请检查地址是否正确。"
+                            : res.status === 401 || res.status === 403
+                                ? "没有权限访问该接口（401/403）。"
+                                : res.status === 429
+                                    ? "请求过于频繁，被服务器限流（429）。"
+                                    : res.status >= 500
+                                        ? "服务器内部错误（5xx），不是你的代码问题。"
+                                        : "请检查请求参数、请求头或请求体。"
+                    );
+                } else if (res.status !== 204) {
+                    // 成功时的额外提示
+                    if (method.value !== "GET" && method.value !== "DELETE") {
+                        showWarn("请求成功",
+                            "注意：jsonplaceholder 是模拟接口，POST/PUT 不会真正写入数据，只会返回模拟结果。");
+                    }
+                }
+            } catch (err) {
+                clearTimeout(timer);
+                stTime.textContent = (Date.now() - start) + " ms";
+                stTime.className = "value bad";
+                stCode.textContent = "—";
+                stCode.className = "value bad";
+                stText.textContent = "请求失败";
+                stText.className = "value bad";
+                stSize.textContent = "—";
+
+                var title = "请求失败";
+                var detail = err.message;
+
+                if (err.name === "AbortError") {
+                    title = "请求超时";
+                    detail = "超过 15 秒没有响应，接口可能不可用。";
+                } else if (err instanceof TypeError) {
+                    title = "网络错误";
+                    detail = "无法连接到服务器。常见原因：地址拼写错误、断网、接口不支持跨域（CORS）、或 http 页面访问 https 接口。";
+                }
+
+                rawBody = '<span class="c">// ' + esc(title) + "：" + esc(detail) + "</span>";
+                rawHeaders = "（没有收到响应，无法获取响应头）";
+                renderTab();
+                showError(title, detail);
+            } finally {
+                loading = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = "发送请求";
+            }
+        }
+
+        sendBtn.addEventListener("click", sendRequest);
+        method.addEventListener("change", syncBodyState);
+
+        // 回车直接发送
+        urlInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") sendRequest();
+        });
+
+        /* ================= 快捷预设 ================= */
+        var presets = {
+            getList: {
+                method: "GET",
+                url: "https://jsonplaceholder.typicode.com/posts?_limit=5"
+            },
+            getOne: {
+                method: "GET",
+                url: "https://jsonplaceholder.typicode.com/posts/1"
+            },
+            post: {
+                method: "POST",
+                url: "https://jsonplaceholder.typicode.com/posts",
+                body: '{\n  "title": "周雨欣的接口测试",\n  "body": "这是 POST 提交的数据",\n  "userId": 1\n}'
+            },
+            put: {
+                method: "PUT",
+                url: "https://jsonplaceholder.typicode.com/posts/1",
+                body: '{\n  "id": 1,\n  "title": "更新后的标题",\n  "userId": 1\n}'
+            },
+            delete: {
+                method: "DELETE",
+                url: "https://jsonplaceholder.typicode.com/posts/1"
+            },
+            http404: {
+                method: "GET",
+                url: "https://jsonplaceholder.typicode.com/posts/99999"
+            },
+            netErr: {
+                method: "GET",
+                url: "https://no-such-domain-zyx.test/api"
+            }
+        };
+
+        document.querySelectorAll(".chip").forEach(function (chip) {
+            chip.addEventListener("click", function () {
+                var p = presets[chip.getAttribute("data-preset")];
+                method.value = p.method;
+                urlInput.value = p.url;
+                if (p.body) bodyInput.value = p.body;
+                syncBodyState();
+                hideError();
+                hideWarn();
+            });
+        });
+
+        syncBodyState();
+    </script>
+</body>
+</html>
