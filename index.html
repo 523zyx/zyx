@@ -3,7 +3,7 @@
     作者：周雨欣
     建立时间：2026-11-02
     使用大模型：DeepSeek-V4.1-Flash
-    功能名称：个人作品集首页（首页设计 + 图标导航）
+    功能名称：个人作品集首页（新视觉 + 精选作品展示）
 -->
 <html lang="zh-CN">
 <head>
@@ -12,39 +12,6 @@
     <title>首页 - 个人作品集</title>
     <link rel="stylesheet" href="css/styles.css">
     <script defer src="js/main.js"></script>
-    <!-- 仅首页使用的设计样式（其他页面不受影响） -->
-    <style>
-        body{padding-top:72px;background:#f7f6fc;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-        .nav{background:rgba(255,255,255,.78);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid rgba(27,23,48,.06);transition:box-shadow .25s,background .25s}
-        .nav.scrolled{box-shadow:0 8px 24px rgba(27,23,48,.08)}
-        .nav-inner{padding:10px 0}
-        .nav .logo{font-weight:800;letter-spacing:1px;font-size:15px}
-        .nav-links{gap:4px}
-        .nav-links a{padding:8px 13px;border-radius:10px;font-size:14px;transition:background .2s,color .2s}
-        .nav-links a:hover{background:rgba(109,93,252,.10);color:#6d5dfc}
-        .nav-links a.active{background:rgba(109,93,252,.14);color:#6d5dfc;font-weight:700}
-        .nav-actions button{background:transparent;border:1px solid rgba(27,23,48,.10);border-radius:10px;width:36px;height:36px;display:grid;place-items:center;font-size:15px;line-height:1;color:#1b1730;cursor:pointer;transition:background .2s}
-        .nav-actions button:hover{background:rgba(109,93,252,.10)}
-        .hero{padding:24px 0 10px}
-        .hero-inner{position:relative;overflow:hidden;padding:88px 34px 66px;border-radius:28px;text-align:center;background:linear-gradient(135deg,#5b4bff 0%,#7c6cff 42%,#b7a5ff 100%);box-shadow:0 26px 60px rgba(91,75,255,.24)}
-        .hero-inner::before{content:"";position:absolute;width:330px;height:330px;border-radius:50%;top:-140px;right:-90px;background:rgba(255,255,255,.16)}
-        .hero-inner::after{content:"";position:absolute;width:230px;height:230px;border-radius:50%;bottom:-120px;left:-70px;background:rgba(255,255,255,.10)}
-        .hero-badge{position:relative;display:inline-flex;align-items:center;padding:7px 17px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.30);color:#fff;font-size:12px;letter-spacing:2px;margin-bottom:20px}
-        .title{position:relative;font-size:clamp(1.9rem,4vw,2.6rem);margin:0;color:#fff;font-weight:800;letter-spacing:2px;text-shadow:0 8px 24px rgba(30,20,90,.22)}
-        .subtitle{position:relative;max-width:600px;margin:14px auto 0;color:rgba(255,255,255,.88);line-height:1.9;font-size:14.5px}
-        .quick-cards{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:36px;text-align:left}
-        .card{display:block;padding:20px;background:#fff;border-radius:16px;color:#1b1730;text-decoration:none;border:1px solid rgba(109,93,252,.14);box-shadow:0 10px 26px rgba(52,38,140,.10);transition:transform .25s,box-shadow .25s,border-color .25s}
-        .card:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(52,38,140,.18);border-color:rgba(109,93,252,.38)}
-        .card-icon{width:42px;height:42px;border-radius:12px;background:rgba(109,93,252,.10);color:#6d5dfc;display:grid;place-items:center;margin-bottom:10px}
-        .card-icon svg{width:22px;height:22px}
-        .quick-cards h3{margin:0 0 6px;font-size:1.05rem}
-        .quick-cards p{margin:0;color:#6b6880;font-size:13px;line-height:1.7}
-        .footer{padding:30px 0;text-align:center;color:#6b6880;font-size:13px;letter-spacing:1px}
-        @media (max-width:800px){
-            .nav-links{top:70px;border-radius:14px;box-shadow:0 16px 36px rgba(27,23,48,.16);border:1px solid rgba(109,93,252,.12);min-width:170px}
-            .hero-inner{padding:64px 20px 48px;border-radius:22px}
-        }
-    </style>
 </head>
 <body>
     <header class="nav">
@@ -66,39 +33,78 @@
 
     <main>
         <section class="hero">
-            <div class="container hero-inner">
-                <span class="hero-badge">PORTFOLIO · 个人作品集</span>
-                <h1 class="title">你好，我是 周雨欣</h1>
-                <p class="subtitle">前端爱好者 · 学习页面布局与交互 · 这是我的个人作品集</p>
-
-                <div class="quick-cards">
-                    <a class="card" href="about.html">
-                        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20.5c0-3.4 3.1-5.9 7-5.9s7 2.5 7 5.9"/></svg></span>
-                        <h3>关于我</h3>
-                        <p>了解我的背景与经历</p>
-                    </a>
-                    <a class="card" href="works.html">
-                        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3.5 16.5 8.5 12l4 3.5" stroke="#4a90e2"/><circle cx="16" cy="9" r="1.5" fill="#4a90e2" stroke="none"/></svg></span>
-                        <h3>项目作品</h3>
-                        <p>查看我的项目示例</p>
-                    </a>
-                    <a class="card" href="skill.html">
-                        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.6 20.6c3-1.1 4.9-3.5 4.9-6.6 0-4.4-3.6-8-8-8s-8 3.6-8 8c0 2.4 1.1 4.3 2.8 5.6v3"/><circle cx="12.6" cy="13" r="2.1"/><path d="M12.6 10.9v-1.3"/></svg></span>
-                        <h3>技能</h3>
-                        <p>掌握的前端技术</p>
-                    </a>
-                    <a class="card" href="contact.html">
-                        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5.5h17v10.5H9.5L6 19.5v-3.5h-2.5z"/><circle cx="8.6" cy="10.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>
-                        <h3>联系我</h3>
-                        <p>给我留言或合作</p>
-                    </a>
+            <div class="container hero-grid">
+                <div class="hero-text">
+                    <p class="kicker">Portfolio · 2026</p>
+                    <h1>你好，我是<br>周雨欣</h1>
+                    <p class="lead">前端爱好者 · 学习页面布局与交互 · 这是我的个人作品集</p>
+                    <div class="btn-row">
+                        <a class="btn btn-solid" href="works.html">查看作品</a>
+                        <a class="btn btn-ghost" href="contact.html">联系我</a>
+                    </div>
                 </div>
+                <div class="portrait">
+                    <img src="img/zyx.jpg" alt="周雨欣的个人照片">
+                    <div class="portrait-badge">
+                        <strong>Front-end Learner</strong>
+                        HTML · CSS · JavaScript
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section container reveal">
+            <div class="section-head">
+                <div>
+                    <p class="kicker">Selected Works</p>
+                    <h2>精选作品</h2>
+                </div>
+                <a class="more" href="works.html">全部作品 →</a>
+            </div>
+
+            <div class="works-showcase">
+                <a class="work-item" href="17-3.html">
+                    <span class="work-idx">01</span>
+                    <div class="work-body">
+                        <h3>商品列表与详情</h3>
+                        <p>调用远程接口获取商品数据，列表页与详情页联动展示，包含骨架屏与异常提示。</p>
+                        <div class="chips"><span>fetch</span><span>JSON</span><span>列表渲染</span></div>
+                    </div>
+                    <span class="work-arrow">↗</span>
+                </a>
+                <a class="work-item" href="17-6.html">
+                    <span class="work-idx">02</span>
+                    <div class="work-body">
+                        <h3>包饺子的异步流程</h3>
+                        <p>用 Promise 与 async/await 演示并行等待：和面、和馅同时进行，页面实时显示每一步进度。</p>
+                        <div class="chips"><span>Promise</span><span>async/await</span><span>setTimeout</span></div>
+                    </div>
+                    <span class="work-arrow">↗</span>
+                </a>
+                <a class="work-item" href="15-1.html">
+                    <span class="work-idx">03</span>
+                    <div class="work-body">
+                        <h3>数 7 的小盒子</h3>
+                        <p>一百个盒子按“数 7”规则自动留空，练习循环、条件判断与网格布局。</p>
+                        <div class="chips"><span>循环</span><span>条件判断</span><span>DOM</span></div>
+                    </div>
+                    <span class="work-arrow">↗</span>
+                </a>
+                <a class="work-item" href="14-1.html">
+                    <span class="work-idx">04</span>
+                    <div class="work-body">
+                        <h3>JavaScript 数据类型</h3>
+                        <p>用六张卡片演示 number、string、boolean、undefined、null、object 及其 typeof 结果。</p>
+                        <div class="chips"><span>数据类型</span><span>typeof</span><span>卡片布局</span></div>
+                    </div>
+                    <span class="work-arrow">↗</span>
+                </a>
             </div>
         </section>
     </main>
 
     <footer class="footer">
-        <div class="container">© 2026 周雨欣 · 保留所有权利</div>
+        <div class="container">© 2026 周雨欣</div>
     </footer>
 </body>
 </html>
