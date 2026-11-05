@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：Canvas 粒子文字动画（文字"周雨欣"）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-1 Canvas 文字粒子动画</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0e1621;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #e8eef6;
+        }
+
+        canvas {
+            display: block;
+            /* 画布随窗口变化，由脚本按 DPR 设置尺寸 */
+        }
+
+        .hint {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            transform: translateX(-50%);
+            font-size: 13px;
+            color: #6d7f95;
+            letter-spacing: 1px;
+            text-align: center;
+            line-height: 1.9;
+            pointer-events: none;
+        }
+        .hint kbd {
+            font-family: Consolas, monospace;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 4px;
+            padding: 1px 7px;
+            color: #a9bdd4;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="scene"></canvas>
+
+    <div class="hint">
+        1 周雨欣 丨 2 SEVENTEEN 丨 3 JOSHUA 丨 鼠标划过可推开粒子
+        <br><kbd>点击画布</kbd> 切换文字
+    </div>
+
+    <script>
+        (function () {
+            var canvas = document.getElementById("scene");
+            var ctx = canvas.getContext("2d");
+
+            /* ================= 基础参数 ================= */
+            var W = 0, H = 0, dpr = 1;
+            var TEXT = "周雨欣";
+
+            // 粒子：位置、速度、目标、颜色、尺寸
+            var particles = [];
+            var particleSize = 2;       // 采样步长，越小粒子越密
+            var mouse = { x: -9999, y: -9999, r: 80 };
+            var hue = 190;              // 当前基础色相
+
+            var HUE_LIST = [190, 168, 44, 336, 265];  // 青 / 绿 / 金 / 粉 / 紫
+            var hueIndex = 0;
+
+            /* ================= 尺寸自适应 ================= */
+            function resize() {
+                dpr = window.devicePixelRatio || 1;
+                W = window.innerWidth;
+                H = window.innerHeight;
+                canvas.width = W * dpr;
+                canvas.height = H * dpr;
+                canvas.style.width = W + "px";
+                canvas.style.height = H + "px";
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                // 尺寸变化后重新采样文字
+                sampleText(TEXT);
+            }
+
+            /* ================= 采样文字像素点 ================= */
+            function sampleText(text) {
+                particles = [];
+
+                // 用离屏 canvas 把文字画出来，再逐像素判断是否为实体
+                var off = document.createElement("canvas");
+                var octx = off.getContext("2d");
+                off.width = W;
+                off.height = H;
+
+                // ---------- 字号自适应：让整行文字始终装进画面（左右各留 8% 边距） ----------
+                var FONT_TEMPLATE = "bold %SIZE%px 'Microsoft YaHei', 'PingFang SC', sans-serif";
+                var maxWidth = W * 0.84;          // 文字允许的最大宽度
+                var maxHeight = H * 0.62;         // 文字允许的最大高度
+                var fontSize = Math.min(H * 0.55, maxWidth, 460);
+
+                octx.font = FONT_TEMPLATE.replace("%SIZE%", fontSize);
+
+                // 按实际测量宽度/高度等比缩放到刚好装下（支持中文、英文、不同字数）
+                var metrics = octx.measureText(text);
+                var textW = metrics.width || fontSize;
+                var textH = (metrics.actualBoundingBoxAscent || fontSize * 0.72) +
+                            (metrics.actualBoundingBoxDescent || fontSize * 0.18);
+
+                var ratio = Math.min(maxWidth / textW, maxHeight / textH, 1);
+                fontSize = Math.max(fontSize * ratio, 28);   // 兜底最小 28px
+
+                octx.font = FONT_TEMPLATE.replace("%SIZE%", fontSize);
+
+                octx.fillStyle = "#fff";
+                octx.textAlign = "center";
+                octx.textBaseline = "middle";
+                octx.fillText(text, W / 2, H / 2);
+
+                var imgData = octx.getImageData(0, 0, W, H).data;
+
+                // 从画面外随机位置飞入
+                for (var y = 0; y < H; y += particleSize) {
+                    for (var x = 0; x < W; x += particleSize) {
+                        var alpha = imgData[(y * W + x) * 4 + 3];
+                        if (alpha > 128) {
+                            var fromLeft = Math.random() < 0.5;
+                            particles.push({
+                                // 初始位置散落在屏幕边缘
+                                x: fromLeft ? -Math.random() * W * 0.5 : W + Math.random() * W * 0.5,
+                                y: Math.random() * H,
+                                vx: 0,
+                                vy: 0,
+                                // 目标位置就是采样到的文字像素
+                                tx: x,
+                                ty: y,
+                                // 每个粒子的色相略微浮动
+                                h: hue + (Math.random() * 50 - 25),
+                                size: Math.random() * 1.2 + 1.2,
+                                ease: 0.04 + Math.random() * 0.06
+                            });
+                        }
+                    }
+                }
+            }
+
+            /* ================= 每帧绘制 ================= */
+            function draw() {
+                // 画布拖尾：用半透明底色覆盖，形成残影
+                ctx.globalCompositeOperation = "source-over";
+                ctx.fillStyle = "rgba(14, 22, 33, 0.22)";
+                ctx.fillRect(0, 0, W, H);
+
+                // 粒子用发光叠加模式
+                ctx.globalCompositeOperation = "lighter";
+
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+
+                    // 向目标点弹性逼近
+                    p.vx += (p.tx - p.x) * p.ease;
+                    p.vy += (p.ty - p.y) * p.ease;
+
+                    // 鼠标斥力：距离鼠标越近，被推得越远
+                    var dx = p.x - mouse.x;
+                    var dy = p.y - mouse.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.r && dist > 0.1) {
+                        var force = (mouse.r - dist) / mouse.r;
+                        p.vx += (dx / dist) * force * 9;
+                        p.vy += (dy / dist) * force * 9;
+                    }
+
+                    // 阻尼，使粒子慢慢停下
+                    p.vx *= 0.86;
+                    p.vy *= 0.86;
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // 运动越快越亮，静止时回到柔和的基础色
+                    var speed = Math.min(Math.sqrt(p.vx * p.vx + p.vy * p.vy), 18);
+                    var light = 52 + speed * 2.2;
+
+                    ctx.beginPath();
+                    ctx.fillStyle = "hsla(" + p.h + ", 92%, " + light + "%, " + (0.55 + speed * 0.02) + ")";
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            /* ================= 交互 ================= */
+            window.addEventListener("mousemove", function (e) {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+            window.addEventListener("mouseleave", function () {
+                mouse.x = -9999;
+                mouse.y = -9999;
+            });
+            // 触屏也支持
+            window.addEventListener("touchmove", function (e) {
+                if (e.touches.length) {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            // 1/2/3 键切换文字
+            var texts = ["周雨欣", "SEVENTEEN", "JOSHUA"];
+            window.addEventListener("keydown", function (e) {
+                var idx = parseInt(e.key, 10) - 1;
+                if (idx >= 0 && idx < texts.length) {
+                    TEXT = texts[idx];
+                    sampleText(TEXT);
+                }
+            });
+
+            // 点击画布：换文字 + 换配色
+            canvas.addEventListener("click", function (e) {
+                mouse.x = -9999;   // 避免点击瞬间被推散
+                mouse.y = -9999;
+
+                var i = (texts.indexOf(TEXT) + 1) % texts.length;
+                TEXT = texts[i];
+
+                hueIndex = (hueIndex + 1) % HUE_LIST.length;
+                hue = HUE_LIST[hueIndex];
+
+                sampleText(TEXT);
+            });
+
+            window.addEventListener("resize", resize);
+
+            /* ================= 启动 ================= */
+            resize();
+            draw();
+        })();
+    </script>
+</body>
+</html>

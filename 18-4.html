@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：ECharts 图表演示（Bump 排名折线图 + 旭日图 Sunburst）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-4 ECharts 图表演示</title>
+    <!-- ECharts 已下载到本地 cdn 目录，离线也能运行 -->
+    <script src="cdn/echarts/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f2f4f7;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            color: #333;
+            min-height: 100vh;
+            padding: 26px 20px 50px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #22303f;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #7c8b9a;
+            margin-bottom: 24px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: #e4e9ef;
+            color: #2a5d8f;
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .grid {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1000px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(34, 48, 63, .09);
+            padding: 16px 16px 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .card-head h2 {
+            font-size: 15px;
+            color: #22303f;
+        }
+        .badge {
+            font-family: Consolas, monospace;
+            font-size: 11.5px;
+            color: #fff;
+            background: #4a90d2;
+            padding: 3px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .badge.orange {
+            background: #e08a3c;
+        }
+
+        /* 图表容器：必须给固定高度，ECharts 靠它计算尺寸 */
+        .chart {
+            width: 100%;
+            height: 480px;
+        }
+
+        .ops {
+            display: flex;
+            gap: 8px;
+            padding: 8px 0 6px;
+            border-top: 1px dashed #eceff3;
+        }
+        .btn {
+            border: 1px solid #d7dee6;
+            background: #fff;
+            color: #55697d;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 12.5px;
+            padding: 5px 14px;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn:hover {
+            border-color: #4a90d2;
+            color: #2a6fae;
+            background: #f4f9fe;
+        }
+        .btn:active {
+            transform: scale(.96);
+        }
+
+        .tip {
+            max-width: 1180px;
+            margin: 22px auto 0;
+            font-size: 12.5px;
+            color: #7c8b9a;
+            line-height: 2;
+            border-left: 3px solid #cfd9e4;
+            padding-left: 14px;
+        }
+        .tip b { color: #47617c; }
+    </style>
+</head>
+<body>
+    <h1>ECharts 数据可视化</h1>
+    <p class="sub">
+        左：Bump Chart 排名变化折线图　丨　右：Sunburst 旭日图　丨
+        依赖 <code>cdn/echarts/echarts.min.js</code>
+    </p>
+
+    <div class="grid">
+        <!-- ============ 图一：Bump 排名图 ============ -->
+        <div class="card">
+            <div class="card-head">
+                <h2>Bump Chart（排名变化）</h2>
+                <span class="badge">line</span>
+            </div>
+            <div class="chart" id="bumpChart"></div>
+            <div class="ops">
+                <button class="btn" id="randomBtn">随机数据</button>
+                <button class="btn" id="saveBtn">保存为图片</button>
+            </div>
+        </div>
+
+        <!-- ============ 图二：旭日图 ============ -->
+        <div class="card">
+            <div class="card-head">
+                <h2>Sunburst（旭日图 · 家庭关系）</h2>
+                <span class="badge orange">sunburst</span>
+            </div>
+            <div class="chart" id="sunChart"></div>
+            <div class="ops">
+                <button class="btn" id="drillBtn">重新加载</button>
+                <button class="btn" id="saveImg2">保存为图片</button>
+            </div>
+        </div>
+    </div>
+
+    <p class="tip">
+        <b>说明：</b>Bump 图把 <code>yAxis.inverse</code> 设为 <code>true</code>，数值 1 在最上方，
+        每条折线代表一个对象的排名随年份的变化；旭日图用 <code>visualMap</code> 的连续型范围把
+        <code>value</code> 映射成从蓝到橙的渐变色，点击扇区可下钻查看子层级。
+    </p>
+
+    <script>
+        /* ============================================================
+           图一：Bump Chart（排名变化折线图）
+        ============================================================ */
+        (function () {
+            var bumpChart = echarts.init(document.getElementById("bumpChart"));
+
+            var names = [
+                "Orange", "Tomato", "Apple", "Sakana", "Banana",
+                "Iwashi", "Snappy Fish", "Lemon", "Pasta"
+            ];
+            var years = ["2001", "2002", "2003", "2004", "2005", "2006"];
+
+            /* Fisher-Yates 洗牌 */
+            function shuffle(array) {
+                var currentIndex = array.length;
+                var randomIndex = 0;
+                while (currentIndex > 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    var tmp = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = tmp;
+                }
+                return array;
+            }
+
+            /* 为每个名字生成每年一个排名（1 ~ names.length） */
+            function generateRankingData() {
+                var map = new Map();
+                var defaultRanking = [];
+                for (var i = 0; i < names.length; i++) {
+                    defaultRanking.push(i + 1);
+                }
+                for (var y = 0; y < years.length; y++) {
+                    var shuffleArray = shuffle(defaultRanking.slice());
+                    for (var k = 0; k < names.length; k++) {
+                        if (!map.has(names[k])) map.set(names[k], []);
+                        map.get(names[k]).push(shuffleArray[k]);
+                    }
+                }
+                return map;
+            }
+
+            function generateSeriesList() {
+                var seriesList = [];
+                var rankingMap = generateRankingData();
+                rankingMap.forEach(function (data, name) {
+                    seriesList.push({
+                        name: name,
+                        symbolSize: 20,
+                        type: "line",
+                        smooth: true,
+                        emphasis: { focus: "series" },
+                        endLabel: {
+                            show: true,
+                            formatter: "{a}",
+                            distance: 20
+                        },
+                        lineStyle: { width: 4 },
+                        data: data
+                    });
+                });
+                return seriesList;
+            }
+
+            function buildOption() {
+                return {
+                    color: [
+                        "#0aa4c4", "#f5c542", "#4b5ea8", "#f4749c", "#8ec94b",
+                        "#c07ec4", "#f59652", "#5b6270", "#2eb39a"
+                    ],
+                    title: {
+                        text: "Bump Chart (Ranking)",
+                        left: "center",
+                        top: 4,
+                        textStyle: { fontSize: 17, fontWeight: "bold", color: "#3a4551" }
+                    },
+                    tooltip: { trigger: "item" },
+                    grid: {
+                        left: 30,
+                        right: 110,
+                        bottom: 30,
+                        top: 48,
+                        containLabel: true
+                    },
+                    toolbox: {
+                        right: 10,
+                        feature: { saveAsImage: {} }
+                    },
+                    xAxis: {
+                        type: "category",
+                        splitLine: { show: true },
+                        axisLabel: { margin: 30, fontSize: 16 },
+                        axisTick: { show: false },
+                        boundaryGap: false,
+                        data: years
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: {
+                            margin: 30,
+                            fontSize: 16,
+                            formatter: "#{value}"
+                        },
+                        splitLine: { lineStyle: { color: "#eef1f5" } },
+                        inverse: true,
+                        interval: 1,
+                        min: 1,
+                        max: names.length
+                    },
+                    series: generateSeriesList()
+                };
+            }
+
+            bumpChart.setOption(buildOption());
+
+            /* 重新随机一组排名 */
+            document.getElementById("randomBtn").addEventListener("click", function () {
+                bumpChart.setOption({ series: generateSeriesList() }, { replaceMerge: "series" });
+            });
+
+            /* 保存图片 */
+            document.getElementById("saveBtn").addEventListener("click", function () {
+                var url = bumpChart.getDataURL({
+                    type: "png",
+                    pixelRatio: 2,
+                    backgroundColor: "#fff"
+                });
+                download(url, "bump-chart.png");
+            });
+
+            window.addEventListener("resize", function () { bumpChart.resize(); });
+            // 卡片宽度变化时也要重算（窗口宽度不变但布局换行的情况）
+            window.addEventListener("orientationchange", function () { bumpChart.resize(); });
+        })();
+
+        /* ============================================================
+           图二：Sunburst（旭日图）
+        ============================================================ */
+        (function () {
+            var sunChart = echarts.init(document.getElementById("sunChart"));
+
+            var data = [
+                {
+                    name: "Grandpa",
+                    children: [
+                        {
+                            name: "Uncle Leo",
+                            value: 15,
+                            children: [
+                                { name: "Cousin Jack", value: 2 },
+                                {
+                                    name: "Cousin Mary",
+                                    value: 5,
+                                    children: [{ name: "Jackson", value: 2 }]
+                                },
+                                { name: "Cousin Ben", value: 4 }
+                            ]
+                        },
+                        {
+                            name: "Aunt Jane",
+                            children: [{ name: "Cousin Kate", value: 4 }]
+                        },
+                        {
+                            name: "Father",
+                            value: 10,
+                            children: [
+                                {
+                                    name: "Me",
+                                    value: 5,
+                                    itemStyle: { color: "red" }
+                                },
+                                { name: "Brother Peter", value: 1 }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Mike",
+                    children: [
+                        {
+                            name: "Uncle Dan",
+                            children: [
+                                { name: "Cousin Lucy", value: 3 },
+                                {
+                                    name: "Cousin Luck",
+                                    value: 4,
+                                    children: [{ name: "Nephew", value: 2 }]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Nancy",
+                    children: [
+                        {
+                            name: "Uncle Nike",
+                            children: [
+                                { name: "Cousin Betty", value: 1 },
+                                { name: "Cousin Jenny", value: 2 }
+                            ]
+                        }
+                    ]
+                }
+            ];
+
+            var option = {
+                // 连续型视觉映射：把 value 映射为四种颜色之间的渐变
+                visualMap: {
+                    type: "continuous",
+                    min: 0,
+                    max: 10,
+                    left: 20,
+                    bottom: 20,
+                    itemHeight: 220,
+                    calculable: true,
+                    inRange: {
+                        color: ["#2F93C8", "#AEC48F", "#FFDB5C", "#F98862"]
+                    }
+                },
+                series: {
+                    type: "sunburst",
+                    data: data,
+                    radius: [0, "90%"],
+                    center: ["52%", "50%"],
+                    label: {
+                        rotate: "radial"
+                    },
+                    emphasis: {
+                        focus: "ancestor"
+                    },
+                    // 扇区之间用白色描边分隔，效果更接近官方示例
+                    itemStyle: {
+                        borderColor: "#fff",
+                        borderWidth: 1.5
+                    }
+                }
+            };
+
+            sunChart.setOption(option);
+
+            /* 重新加载（点击扇区下钻后可一键复位到根节点） */
+            document.getElementById("drillBtn").addEventListener("click", function () {
+                sunChart.setOption(option, { notMerge: true });
+            });
+
+            /* 保存图片 */
+            document.getElementById("saveImg2").addEventListener("click", function () {
+                var url = sunChart.getDataURL({
+                    type: "png",
+                    pixelRatio: 2,
+                    backgroundColor: "#fff"
+                });
+                download(url, "sunburst.png");
+            });
+
+            window.addEventListener("resize", function () { sunChart.resize(); });
+            window.addEventListener("orientationchange", function () { sunChart.resize(); });
+        })();
+
+        /* ============================================================
+           通用工具：把 dataURL 存成本地图片
+        ============================================================ */
+        function download(url, filename) {
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

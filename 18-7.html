@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：基于 three.js 的两个三维场景（旋转几何星系 / 智能客服三维节点网络）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-7 Three.js 三维场景</title>
+    <script src="cdn/three/three.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0d1420;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            color: #dbe6f2;
+            min-height: 100vh;
+            padding: 26px 20px 50px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #eaf2fa;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #7d92a8;
+            margin-bottom: 24px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: rgba(255, 255, 255, .07);
+            color: #7fc4f0;
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .grid {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1020px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid rgba(255, 255, 255, .09);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px 16px 10px;
+        }
+        .card-head h2 {
+            font-size: 15px;
+            font-weight: normal;
+            color: #cfe0f0;
+        }
+        .badge {
+            font-family: Consolas, monospace;
+            font-size: 11.5px;
+            color: #0d1420;
+            background: #6fc3f7;
+            padding: 3px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .badge.pink {
+            background: #f090b8;
+        }
+
+        /* three.js 的渲染目标容器，必须有宽高 */
+        .stage {
+            position: relative;
+            width: 100%;
+            height: 460px;
+            background: radial-gradient(ellipse at 50% 40%, #16233a 0%, #0a111c 70%);
+        }
+        .stage canvas {
+            display: block;
+        }
+
+        .hint {
+            position: absolute;
+            left: 14px;
+            bottom: 12px;
+            font-size: 11.5px;
+            color: #6b8098;
+            pointer-events: none;
+            line-height: 1.7;
+        }
+
+        .ops {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px 14px;
+            border-top: 1px solid rgba(255, 255, 255, .07);
+        }
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .16);
+            background: rgba(255, 255, 255, .04);
+            color: #a9c1d6;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 12.5px;
+            padding: 5px 14px;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn:hover {
+            border-color: #6fc3f7;
+            color: #cfe9fb;
+            background: rgba(111, 195, 247, .12);
+        }
+        .btn:active { transform: scale(.96); }
+
+        .note {
+            max-width: 1240px;
+            margin: 24px auto 0;
+            font-size: 12.5px;
+            color: #7d92a8;
+            line-height: 2;
+            border-left: 3px solid rgba(111, 195, 247, .35);
+            padding-left: 14px;
+        }
+        .note b { color: #a9c1d6; }
+    </style>
+</head>
+<body>
+    <h1>Three.js 三维场景</h1>
+    <p class="sub">
+        左：几何体星系（自动旋转 + 鼠标控制视角）　丨　右：智能客服知识网络（3D 节点图）
+        依赖 <code>cdn/three/three.min.js</code>
+    </p>
+
+    <div class="grid">
+        <!-- ============ 场景一 ============ -->
+        <div class="card">
+            <div class="card-head">
+                <h2>几何体星系 Galaxy</h2>
+                <span class="badge">scene 1</span>
+            </div>
+            <div class="stage" id="stage1">
+                <div class="hint">拖拽旋转 丨 滚轮缩放</div>
+            </div>
+            <div class="ops">
+                <button class="btn" id="btnPause1">暂停旋转</button>
+                <button class="btn" id="btnColor1">换个配色</button>
+                <button class="btn" id="btnReset1">复位视角</button>
+            </div>
+        </div>
+
+        <!-- ============ 场景二 ============ -->
+        <div class="card">
+            <div class="card-head">
+                <h2>知识网络 Knowledge Graph 3D</h2>
+                <span class="badge pink">scene 2</span>
+            </div>
+            <div class="stage" id="stage2">
+                <div class="hint">拖拽旋转 丨 滚轮缩放 丨 连线代表知识流向</div>
+            </div>
+            <div class="ops">
+                <button class="btn" id="btnPause2">暂停旋转</button>
+                <button class="btn" id="btnEnter2">进入/退出网络</button>
+                <button class="btn" id="btnReset2">复位视角</button>
+            </div>
+        </div>
+    </div>
+
+    <p class="note">
+        <b>说明：</b>两个场景都遵循 three.js 的固定套路：
+        创建 <code>Scene</code> → 配置 <code>PerspectiveCamera</code> 与视口 → 添加光源与网格 →
+        在 <code>requestAnimationFrame</code> 循环里更新物体并 <code>renderer.render()</code>。
+        场景一用 <code>TorusKnotGeometry / IcosahedronGeometry</code> 组合出几何星系并加 <code>Points</code> 星尘；
+        场景二用扁球体 <code>SphereGeometry</code> 作为知识节点，用 <code>LineSegments</code> 连接节点构成知识网络。
+    </p>
+
+    <script>
+        /* ============================================================
+           场景一：几何体星系
+        ============================================================ */
+        (function () {
+            var container = document.getElementById("stage1");
+
+            // ---- 基础三件套：场景 / 相机 / 渲染器 ----
+            var scene = new THREE.Scene();
+            // 远景雾，让边缘的物体渐渐融入背景
+            scene.fog = new THREE.FogExp2(0x0a111c, 0.028);
+
+            var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+            camera.position.set(0, 6, 22);
+
+            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // ---- 光源 ----
+            scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+
+            var keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
+            keyLight.position.set(8, 14, 10);
+            scene.add(keyLight);
+
+            var rimLight = new THREE.DirectionalLight(0x4fa8ff, 0.9);
+            rimLight.position.set(-12, -6, -8);
+            scene.add(rimLight);
+
+            var pointLight = new THREE.PointLight(0xff6fa8, 1.4, 60);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            // ---- 中心：环面结 ----
+            var knotGeo = new THREE.TorusKnotGeometry(3.4, 1.05, 180, 24, 2, 3);
+            var knotMat = new THREE.MeshStandardMaterial({
+                color: 0x5fc2f5,
+                metalness: 0.75,
+                roughness: 0.22,
+                emissive: 0x0d3b57,
+                emissiveIntensity: 0.8
+            });
+            var knot = new THREE.Mesh(knotGeo, knotMat);
+            scene.add(knot);
+
+            // ---- 外层：12 个绕行的小多面体 ----
+            var orbiters = [];
+            var ORBITER_COUNT = 12;
+            var COLORS = [
+                [0x5fc2f5, 0xff6fa8, 0x8fe07a],
+                [0xffc25f, 0x9b7bff, 0x4fd6c8],
+                [0xff8a5f, 0x7ab8ff, 0xe9e45f]
+            ];
+            var colorIndex = 0;
+
+            function buildOrbiters() {
+                orbiters.forEach(function (o) {
+                    scene.remove(o.mesh);
+                    o.mesh.geometry.dispose();
+                    o.mesh.material.dispose();
+                });
+                orbiters = [];
+
+                var palette = COLORS[colorIndex];
+                for (var i = 0; i < ORBITER_COUNT; i++) {
+                    var geo = new THREE.IcosahedronGeometry(0.55 + Math.random() * 0.5, 0);
+                    var mat = new THREE.MeshStandardMaterial({
+                        color: palette[i % palette.length],
+                        metalness: 0.6,
+                        roughness: 0.3,
+                        flatShading: true,
+                        emissive: palette[i % palette.length],
+                        emissiveIntensity: 0.18
+                    });
+                    var mesh = new THREE.Mesh(geo, mat);
+                    scene.add(mesh);
+                    orbiters.push({
+                        mesh: mesh,
+                        radius: 8 + Math.random() * 4,
+                        speed: 0.18 + Math.random() * 0.4,
+                        phase: Math.random() * Math.PI * 2,
+                        tilt: (Math.random() - 0.5) * 1.4,
+                        spin: 0.5 + Math.random()
+                    });
+                }
+            }
+            buildOrbiters();
+
+            // ---- 星尘粒子 ----
+            var starCount = 900;
+            var starPos = new Float32Array(starCount * 3);
+            for (var s = 0; s < starCount; s++) {
+                // 在一个大球壳内随机分布
+                var r = 16 + Math.random() * 34;
+                var theta = Math.random() * Math.PI * 2;
+                var phi = Math.acos(2 * Math.random() - 1);
+                starPos[s * 3] = r * Math.sin(phi) * Math.cos(theta);
+                starPos[s * 3 + 1] = r * Math.cos(phi) * 0.6;
+                starPos[s * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+            }
+            var starGeo = new THREE.BufferGeometry();
+            starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+            var starMat = new THREE.PointsMaterial({
+                color: 0x9fd4f5,
+                size: 0.22,
+                transparent: true,
+                opacity: 0.85,
+                sizeAttenuation: true
+            });
+            var stars = new THREE.Points(starGeo, starMat);
+            scene.add(stars);
+
+            // ---- 鼠标拖拽控制视角（不依赖 OrbitControls，手写更轻量） ----
+            var isDown = false;
+            var lastX = 0, lastY = 0;
+            var rotY = 0, rotX = 0;          // 相机当前绕原点的角度
+            var targetRotY = 0, targetRotX = 0;
+            var camDist = 22;
+
+            container.addEventListener("pointerdown", function (e) {
+                isDown = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                container.style.cursor = "grabbing";
+            });
+            window.addEventListener("pointerup", function () {
+                isDown = false;
+                container.style.cursor = "grab";
+            });
+            container.addEventListener("pointermove", function (e) {
+                if (!isDown) return;
+                targetRotY += (e.clientX - lastX) * 0.006;
+                targetRotX += (e.clientY - lastY) * 0.004;
+                // 限制上下角度，避免翻转过头
+                targetRotX = Math.max(-1.1, Math.min(1.1, targetRotX));
+                lastX = e.clientX;
+                lastY = e.clientY;
+            });
+            container.addEventListener("wheel", function (e) {
+                e.preventDefault();
+                camDist = Math.max(12, Math.min(46, camDist + e.deltaY * 0.02));
+            }, { passive: false });
+
+            // ---- 自适应尺寸 ----
+            function resize() {
+                var w = container.clientWidth;
+                var h = container.clientHeight;
+                renderer.setSize(w, h, false);
+                renderer.domElement.style.width = w + "px";
+                renderer.domElement.style.height = h + "px";
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+            }
+
+            // ---- 渲染循环 ----
+            var clock = new THREE.Clock();
+            var paused = false;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                var t = clock.getElapsedTime();
+                var dt = clock.getDelta() || 0.016;
+
+                if (!paused) {
+                    knot.rotation.y += 0.006;
+                    knot.rotation.x += 0.0022;
+                    stars.rotation.y += 0.0006;
+
+                    for (var i = 0; i < orbiters.length; i++) {
+                        var o = orbiters[i];
+                        var ang = t * o.speed + o.phase;
+                        o.mesh.position.set(
+                            Math.cos(ang) * o.radius,
+                            Math.sin(ang * 0.8 + o.phase) * 1.8 + o.tilt * 2,
+                            Math.sin(ang) * o.radius
+                        );
+                        o.mesh.rotation.x += 0.02 * o.spin;
+                        o.mesh.rotation.y += 0.014 * o.spin;
+                    }
+                    pointLight.intensity = 1.2 + Math.sin(t * 2) * 0.5;
+                }
+
+                // 相机朝目标角度平滑插值
+                rotY += (targetRotY - rotY) * 0.08;
+                rotX += (targetRotX - rotX) * 0.08;
+                camera.position.set(
+                    Math.sin(rotY) * Math.cos(rotX) * camDist,
+                    Math.sin(rotX) * camDist + 4,
+                    Math.cos(rotY) * Math.cos(rotX) * camDist
+                );
+                camera.lookAt(0, 0, 0);
+
+                renderer.render(scene, camera);
+            }
+
+            // ---- 交互按钮 ----
+            var btnPause1 = document.getElementById("btnPause1");
+            btnPause1.addEventListener("click", function () {
+                paused = !paused;
+                btnPause1.textContent = paused ? "继续旋转" : "暂停旋转";
+            });
+
+            document.getElementById("btnColor1").addEventListener("click", function () {
+                colorIndex = (colorIndex + 1) % COLORS.length;
+                var palette = COLORS[colorIndex];
+                // 中心结跟随第一个颜色
+                knotMat.color.setHex(palette[0]);
+                buildOrbiters();
+            });
+
+            document.getElementById("btnReset1").addEventListener("click", function () {
+                targetRotY = 0;
+                targetRotX = 0;
+                rotY = 0;
+                rotX = 0;
+                camDist = 22;
+            });
+
+            container.style.cursor = "grab";
+            resize();
+            animate();
+            window.addEventListener("resize", resize);
+        })();
+
+        /* ============================================================
+           场景二：知识网络（3D 节点 + 连线）
+        ============================================================ */
+        (function () {
+            var container = document.getElementById("stage2");
+
+            var scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0a111c, 0.026);
+
+            var camera = new THREE.PerspectiveCamera(52, 1, 0.1, 300);
+            camera.position.set(0, 8, 34);
+
+            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+            var dl = new THREE.DirectionalLight(0xffffff, 0.9);
+            dl.position.set(6, 12, 8);
+            scene.add(dl);
+
+            /* ---------- 知识节点定义 ----------
+               group 决定颜色：0 用户侧 / 1 服务层 / 2 知识库 / 3 模型层
+            ------------------------------------------- */
+            var NODES = [
+                { name: "用户", group: 0, r: 1.5 },
+
+                { name: "接入", group: 1, r: 1.0 },
+                { name: "会话", group: 1, r: 1.0 },
+                { name: "意图", group: 1, r: 1.0 },
+
+                { name: "知识库", group: 2, r: 1.3 },
+                { name: "切片", group: 2, r: 0.85 },
+                { name: "图谱", group: 2, r: 0.85 },
+                { name: "检索", group: 2, r: 1.0 },
+                { name: "重排", group: 2, r: 0.85 },
+
+                { name: "大模型", group: 3, r: 1.4 },
+                { name: "Prompt", group: 3, r: 0.9 },
+                { name: "答案", group: 3, r: 1.0 },
+
+                { name: "人工", group: 0, r: 0.95 },
+                { name: "评测", group: 3, r: 0.9 }
+            ];
+
+            // 连线（索引对）：体现"知识流向"
+            var EDGES = [
+                [0, 1], [1, 2], [2, 3],
+                [3, 7], [4, 5], [4, 6], [7, 8], [8, 9],
+                [9, 10], [10, 11], [3, 12], [11, 0],
+                [11, 13], [13, 4], [13, 9], [5, 4], [2, 7]
+            ];
+
+            var GROUP_COLORS = [0x6fc3f7, 0x8fe07a, 0xffc25f, 0xff6fa8];
+
+            // 用斐波那契球面分布把节点铺开成球形
+            var nodeObjs = [];
+            var nodePositions = [];
+            var N = NODES.length;
+
+            NODES.forEach(function (n, i) {
+                // 球面均匀分布
+                var phi = Math.acos(1 - 2 * (i + 0.5) / N);
+                var theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
+                var R = 11;
+                var pos = new THREE.Vector3(
+                    Math.sin(phi) * Math.cos(theta) * R,
+                    Math.cos(phi) * R * 0.75,
+                    Math.sin(phi) * Math.sin(theta) * R
+                );
+                nodePositions.push(pos);
+
+                var color = GROUP_COLORS[n.group];
+
+                var geo = new THREE.SphereGeometry(n.r, 28, 20);
+                var mat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.42,
+                    metalness: 0.35,
+                    roughness: 0.32
+                });
+                var mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(pos);
+                scene.add(mesh);
+
+                // 外层光晕
+                var haloGeo = new THREE.SphereGeometry(n.r * 1.7, 20, 14);
+                var haloMat = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.12,
+                    depthWrite: false
+                });
+                var halo = new THREE.Mesh(haloGeo, haloMat);
+                halo.position.copy(pos);
+                scene.add(halo);
+
+                nodeObjs.push({
+                    mesh: mesh,
+                    halo: halo,
+                    basePos: pos.clone(),
+                    baseR: n.r,
+                    phase: Math.random() * Math.PI * 2
+                });
+            });
+
+            // ---- 连线：用 LineSegments 一次性画完 ----
+            var linePositions = [];
+            EDGES.forEach(function (pair) {
+                var a = nodePositions[pair[0]];
+                var b = nodePositions[pair[1]];
+                linePositions.push(a.x, a.y, a.z, b.x, b.y, b.z);
+            });
+            var lineGeo = new THREE.BufferGeometry();
+            lineGeo.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+            var lineMat = new THREE.LineBasicMaterial({
+                color: 0x4f7fa5,
+                transparent: true,
+                opacity: 0.42
+            });
+            var lines = new THREE.LineSegments(lineGeo, lineMat);
+            var network = new THREE.Group();   // 把节点和线放到同一组里一起旋转
+            scene.add(lines);
+
+            // ---- 背景星点 ----
+            var bgCount = 700;
+            var bgPos = new Float32Array(bgCount * 3);
+            for (var k = 0; k < bgCount; k++) {
+                bgPos[k * 3] = (Math.random() - 0.5) * 120;
+                bgPos[k * 3 + 1] = (Math.random() - 0.5) * 90;
+                bgPos[k * 3 + 2] = (Math.random() - 0.5) * 120;
+            }
+            var bgGeo = new THREE.BufferGeometry();
+            bgGeo.setAttribute("position", new THREE.BufferAttribute(bgPos, 3));
+            var bgStars = new THREE.Points(bgGeo, new THREE.PointsMaterial({
+                color: 0x7fa8c9,
+                size: 0.3,
+                transparent: true,
+                opacity: 0.7
+            }));
+            scene.add(bgStars);
+
+            /* ---------- 文字标签：用 canvas 贴图生成 Sprite ---------- */
+            function makeLabel(text) {
+                var cv = document.createElement("canvas");
+                var ctx = cv.getContext("2d");
+                var fs = 40;
+                cv.width = 256;
+                cv.height = 96;
+                ctx.font = "bold " + fs + "px 'Microsoft YaHei', sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "rgba(230, 242, 252, 0.92)";
+                ctx.fillText(text, cv.width / 2, cv.height / 2);
+
+                var tex = new THREE.CanvasTexture(cv);
+                tex.minFilter = THREE.LinearFilter;
+                var spMat = new THREE.SpriteMaterial({
+                    map: tex,
+                    transparent: true,
+                    depthTest: false
+                });
+                var sprite = new THREE.Sprite(spMat);
+                sprite.scale.set(3.6, 1.35, 1);
+                return sprite;
+            }
+
+            nodeObjs.forEach(function (o, i) {
+                var label = makeLabel(NODES[i].name);
+                label.position.copy(o.basePos).multiplyScalar(1.16);
+                scene.add(label);
+                o.label = label;
+            });
+
+            /* ---------- 视角控制 ---------- */
+            var isDown = false, lastX = 0, lastY = 0;
+            var rotY = 0;                    // 网络自转角度
+            var rotX = 0, tRotY = 0, tRotX = 0;  // 相机俯仰与水平角度
+            var dist = 34, tDist = 34;
+
+            container.addEventListener("pointerdown", function (e) {
+                isDown = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                container.style.cursor = "grabbing";
+            });
+            window.addEventListener("pointerup", function () {
+                isDown = false;
+                container.style.cursor = "grab";
+            });
+            container.addEventListener("pointermove", function (e) {
+                if (!isDown) return;
+                tRotY += (e.clientX - lastX) * 0.006;
+                tRotX += (e.clientY - lastY) * 0.004;
+                tRotX = Math.max(-1.0, Math.min(1.0, tRotX));
+                lastX = e.clientX;
+                lastY = e.clientY;
+            });
+            container.addEventListener("wheel", function (e) {
+                e.preventDefault();
+                tDist = Math.max(18, Math.min(70, tDist + e.deltaY * 0.03));
+            }, { passive: false });
+
+            function resize() {
+                var w = container.clientWidth;
+                var h = container.clientHeight;
+                renderer.setSize(w, h, false);
+                renderer.domElement.style.width = w + "px";
+                renderer.domElement.style.height = h + "px";
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+            }
+
+            /* ---------- 渲染循环 ---------- */
+            var clock = new THREE.Clock();
+            var paused = false;
+            var enterMode = false;    // "进入网络"模式：相机更近、节点胀大
+
+            function animate() {
+                requestAnimationFrame(animate);
+                var t = clock.getElapsedTime();
+                var dt = clock.getDelta() || 0.016;
+
+                if (!paused) {
+                    rotY += 0.0018;
+
+                    // 整体网络缓慢自转
+                    lines.rotation.y = rotY;
+
+                    for (var i = 0; i < nodeObjs.length; i++) {
+                        var o = nodeObjs[i];
+
+                        // 节点绕 Y 轴跟着网络转
+                        var ang = rotY;
+                        var px = o.basePos.x * Math.cos(ang) + o.basePos.z * Math.sin(ang);
+                        var pz = -o.basePos.x * Math.sin(ang) + o.basePos.z * Math.cos(ang);
+                        o.mesh.position.set(px, o.basePos.y, pz);
+                        o.halo.position.copy(o.mesh.position);
+
+                        // 轻微的呼吸缩放
+                        var pulse = 1 + Math.sin(t * 1.6 + o.phase) * 0.08;
+                        o.mesh.scale.setScalar(pulse);
+                        o.halo.scale.setScalar(pulse * (1 + Math.sin(t * 1.6 + o.phase) * 0.06));
+
+                        // 标签跟随
+                        if (o.label) {
+                            o.label.position.set(px * 1.16, o.basePos.y * 1.16, pz * 1.16);
+                        }
+                    }
+                }
+
+                // 相机平滑：拖拽角度 + 距离都做插值
+                rotX += (tRotX - rotX) * 0.08;
+                dist += (tDist - dist) * 0.08;
+                camera.position.set(
+                    Math.sin(tRotY) * Math.cos(rotX) * dist,
+                    Math.sin(rotX) * dist + 4,
+                    Math.cos(tRotY) * Math.cos(rotX) * dist
+                );
+                camera.lookAt(0, 0, 0);
+
+                renderer.render(scene, camera);
+            }
+
+            /* ---------- 按钮 ---------- */
+            var btnPause2 = document.getElementById("btnPause2");
+            btnPause2.addEventListener("click", function () {
+                paused = !paused;
+                btnPause2.textContent = paused ? "继续旋转" : "暂停旋转";
+            });
+
+            document.getElementById("btnEnter2").addEventListener("click", function () {
+                enterMode = !enterMode;
+                if (enterMode) {
+                    tDist = 20;
+                    document.getElementById("btnEnter2").textContent = "退出网络";
+                } else {
+                    tDist = 34;
+                    document.getElementById("btnEnter2").textContent = "进入/退出网络";
+                }
+            });
+
+            document.getElementById("btnReset2").addEventListener("click", function () {
+                tRotY = 0;
+                tRotX = 0;
+                rotX = 0;
+                rotY = 0;
+                tDist = 34;
+                lines.rotation.y = 0;
+                document.getElementById("btnEnter2").textContent = "进入/退出网络";
+                enterMode = false;
+            });
+
+            container.style.cursor = "grab";
+            resize();
+            animate();
+            window.addEventListener("resize", resize);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：基于知识库的智能客服系统架构图（SVG 矢量绘制，面向科研方向）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-3 知识库智能客服系统架构图</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #eef1f6;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            color: #22303f;
+            padding: 32px 20px 60px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 25px;
+            color: #17304d;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 13.5px;
+            color: #6c8299;
+            line-height: 1.9;
+            margin-bottom: 26px;
+        }
+        .subtitle code {
+            font-family: Consolas, monospace;
+            background: #e2e9f2;
+            color: #2a5d8f;
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .board {
+            max-width: 1240px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(23, 48, 77, .13);
+            padding: 24px 22px 18px;
+        }
+
+        /* ---------- SVG 本体 ---------- */
+        .arch-svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* ---------- SVG 内部元素样式 ---------- */
+        .layer-bg {
+            fill-opacity: .055;
+            stroke-opacity: .42;
+            stroke-width: 1.4;
+            stroke-dasharray: 7 5;
+        }
+        .layer-name {
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .layer-tag {
+            font-size: 11.5px;
+            fill: #8296ab;
+            letter-spacing: .5px;
+        }
+        .layer-bar {
+            stroke-width: 5;
+            stroke-linecap: round;
+        }
+
+        .node rect {
+            fill: #fff;
+            stroke-width: 1.5;
+            transition: filter .25s, transform .25s;
+        }
+        .node:hover rect {
+            filter: drop-shadow(0 6px 12px rgba(23, 48, 77, .25));
+        }
+        .node text {
+            font-size: 13px;
+            fill: #22303f;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        .node.accent rect {
+            stroke-width: 2.2;
+        }
+        .node.accent text {
+            font-weight: bold;
+        }
+        .node.dashed rect {
+            stroke-dasharray: 5 4;
+        }
+        .node .tag-txt {
+            font-size: 10.5px;
+            fill: #8497aa;
+        }
+
+        /* 连线 */
+        .flow {
+            fill: none;
+            stroke: #b6c6d8;
+            stroke-width: 1.8;
+            marker-end: url(#arrow);
+        }
+        .flow-strong {
+            fill: none;
+            stroke: #8fa9c4;
+            stroke-width: 2.2;
+            marker-end: url(#arrow-dark);
+        }
+        .flow-dash {
+            fill: none;
+            stroke: #c3cfdd;
+            stroke-width: 1.6;
+            stroke-dasharray: 6 5;
+            marker-end: url(#arrow);
+        }
+        .flow-label {
+            font-size: 11px;
+            fill: #7d92a8;
+            text-anchor: middle;
+        }
+
+        /* 知识点标注（科研视角的小注释） */
+        .note-box rect {
+            fill: #fdf8ec;
+            stroke: #e6d5a8;
+            stroke-width: 1;
+        }
+        .note-box text {
+            font-size: 11.5px;
+            fill: #8a6d2f;
+            line-height: 1.6;
+        }
+
+        /* 图例 */
+        .legend-wrap {
+            max-width: 1240px;
+            margin: 20px auto 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px 24px;
+            font-size: 12.5px;
+            color: #5c7186;
+        }
+        .legend-wrap span {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .legend-wrap i {
+            width: 13px;
+            height: 13px;
+            border-radius: 3px;
+            display: inline-block;
+            border: 1.5px solid;
+        }
+
+        .footnote {
+            max-width: 1240px;
+            margin: 22px auto 0;
+            font-size: 12.5px;
+            color: #7b8fa4;
+            line-height: 2;
+            border-left: 3px solid #cbd8e5;
+            padding-left: 14px;
+        }
+        .footnote b { color: #47617c; }
+
+        @media (max-width: 760px) {
+            h1 { font-size: 20px; }
+            .board { padding: 14px 10px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>知识库驱动的智能客服系统 · 全栈架构</h1>
+    <p class="subtitle">
+        面向科研方向的系统结构：以 <code>RAG</code> 检索增强生成为核心链路，
+        覆盖知识治理、意图理解、推理生成、在线服务与评测反馈闭环
+    </p>
+
+    <div class="board">
+        <!-- viewBox 定义设计坐标系，width:100% 自适应缩放 -->
+        <svg class="arch-svg" viewBox="0 0 1180 1030" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="知识库智能客服系统架构图">
+            <defs>
+                <!-- 箭头标记 -->
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                        markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#b6c6d8"/>
+                </marker>
+                <marker id="arrow-dark" viewBox="0 0 10 10" refX="8" refY="5"
+                        markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#8fa9c4"/>
+                </marker>
+                <!-- 各层主题色 -->
+                <linearGradient id="g-flow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2f7fbf"/>
+                    <stop offset="100%" stop-color="#5aa9dd"/>
+                </linearGradient>
+            </defs>
+
+            <!-- ============================================================
+                 0. 用户接入层  y: 20 - 96
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="20" width="1148" height="78" rx="10"
+                      fill="#2f7fbf" stroke="#2f7fbf"/>
+                <line class="layer-bar" x1="16" y1="32" x2="16" y2="86" stroke="#2f7fbf"/>
+                <text class="layer-name" x="34" y="40" fill="#2f7fbf">① 用户接入层</text>
+                <text class="layer-tag" x="34" y="58">多终端会话入口</text>
+
+                <g class="node accent">
+                    <rect x="180" y="34" width="196" height="50" rx="25" stroke="#2f7fbf" fill="#eef6fc"/>
+                    <text x="278" y="59">网页/H5 在线客服</text>
+                </g>
+                <g class="node">
+                    <rect x="404" y="34" width="176" height="50" rx="25" stroke="#7fb3d8"/>
+                    <text x="492" y="59">移动 App 客服</text>
+                </g>
+                <g class="node">
+                    <rect x="608" y="34" width="176" height="50" rx="25" stroke="#7fb3d8"/>
+                    <text x="696" y="59">微信/小程序</text>
+                </g>
+                <g class="node">
+                    <rect x="812" y="34" width="176" height="50" rx="25" stroke="#7fb3d8"/>
+                    <text x="900" y="59">电话/工单</text>
+                </g>
+                <g class="node dashed">
+                    <rect x="1016" y="34" width="150" height="50" rx="25" stroke="#a8c6de"/>
+                    <text x="1091" y="59">人工坐席</text>
+                </g>
+            </g>
+
+            <!-- 用户 → 接入 -->
+            <path class="flow-strong" d="M590,98 L590,126"/>
+            <text class="flow-label" x="660" y="117">用户 Query / 多轮上下文</text>
+
+            <!-- ============================================================
+                 1. 接入与预处理层  y: 128 - 226
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="128" width="1148" height="98" rx="10"
+                      fill="#2f7fbf" stroke="#2f7fbf"/>
+                <line class="layer-bar" x1="16" y1="140" x2="16" y2="214" stroke="#2f7fbf"/>
+                <text class="layer-name" x="34" y="148" fill="#2f7fbf">② 接入与预处理层</text>
+                <text class="layer-tag" x="34" y="166">网关 / 安全 / 会话管理</text>
+
+                <g class="node">
+                    <rect x="180" y="148" width="168" height="58" rx="7" stroke="#7fb3d8"/>
+                    <text x="264" y="169">API 网关</text>
+                    <text class="tag-txt" x="264" y="190">鉴权·限流·路由</text>
+                </g>
+                <g class="node">
+                    <rect x="370" y="148" width="168" height="58" rx="7" stroke="#7fb3d8"/>
+                    <text x="454" y="169">会话管理</text>
+                    <text class="tag-txt" x="454" y="190">Session·多轮状态</text>
+                </g>
+                <g class="node">
+                    <rect x="560" y="148" width="168" height="58" rx="7" stroke="#7fb3d8"/>
+                    <text x="644" y="169">安全与脱敏</text>
+                    <text class="tag-txt" x="644" y="190">敏感词·内容审核</text>
+                </g>
+                <g class="node">
+                    <rect x="750" y="148" width="168" height="58" rx="7" stroke="#7fb3d8"/>
+                    <text x="834" y="169">意图识别</text>
+                    <text class="tag-txt" x="834" y="190">分类 / NER / 槽位</text>
+                </g>
+                <g class="node">
+                    <rect x="940" y="148" width="208" height="58" rx="7" stroke="#7fb3d8"/>
+                    <text x="1044" y="169">Query 改写与扩写</text>
+                    <text class="tag-txt" x="1044" y="190">指代消解·关键词扩展</text>
+                </g>
+            </g>
+
+            <!-- 预处理 → 核心（左右两条汇入） -->
+            <path class="flow-strong" d="M264,228 L264,262 L520,262 L520,290"/>
+            <path class="flow-strong" d="M834,228 L834,262 L660,262 L660,290"/>
+
+            <!-- ============================================================
+                 2. 知识库与治理层  y: 292 - 452  （左栏）
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="292" width="556" height="160" rx="10"
+                      fill="#3f9a73" stroke="#3f9a73"/>
+                <line class="layer-bar" x1="16" y1="304" x2="16" y2="440" stroke="#3f9a73"/>
+                <text class="layer-name" x="34" y="312" fill="#3f9a73">③ 知识库与知识治理</text>
+                <text class="layer-tag" x="34" y="330">数据接入 · 清洗 · 切片 · 向量化</text>
+
+                <g class="node accent">
+                    <rect x="34" y="346" width="150" height="48" rx="7" stroke="#3f9a73" fill="#eef7f2"/>
+                    <text x="109" y="364">多源知识接入</text>
+                    <text class="tag-txt" x="109" y="382">文档/FAQ/工单/网页</text>
+                </g>
+                <g class="node">
+                    <rect x="202" y="346" width="150" height="48" rx="7" stroke="#7cbf9e"/>
+                    <text x="277" y="364">清洗与结构化</text>
+                    <text class="tag-txt" x="277" y="382">去噪·去重·纠错</text>
+                </g>
+                <g class="node">
+                    <rect x="370" y="346" width="150" height="48" rx="7" stroke="#7cbf9e"/>
+                    <text x="445" y="364">文档切片</text>
+                    <text class="tag-txt" x="445" y="382">Chunk·重叠窗口</text>
+                </g>
+                <g class="node accent">
+                    <rect x="34" y="404" width="150" height="40" rx="7" stroke="#3f9a73" fill="#eef7f2"/>
+                    <text x="109" y="424">Embedding 向量化</text>
+                </g>
+                <g class="node">
+                    <rect x="202" y="404" width="150" height="40" rx="7" stroke="#7cbf9e"/>
+                    <text x="277" y="424">向量索引 IVF/HNSW</text>
+                </g>
+                <g class="node">
+                    <rect x="370" y="404" width="150" height="40" rx="7" stroke="#7cbf9e"/>
+                    <text x="445" y="424">知识图谱三元组</text>
+                </g>
+            </g>
+
+            <!-- ============================================================
+                 3. 检索增强层  y: 292 - 452 （右栏）
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="588" y="292" width="576" height="160" rx="10"
+                      fill="#c2803a" stroke="#c2803a"/>
+                <line class="layer-bar" x1="588" y1="304" x2="588" y2="440" stroke="#c2803a"/>
+                <text class="layer-name" x="606" y="312" fill="#c2803a">④ 检索增强层 RAG</text>
+                <text class="layer-tag" x="606" y="330">召回 · 重排 · 融合</text>
+
+                <g class="node accent">
+                    <rect x="606" y="346" width="168" height="48" rx="7" stroke="#c2803a" fill="#fdf6ee"/>
+                    <text x="690" y="364">混合召回</text>
+                    <text class="tag-txt" x="690" y="382">向量 + BM25 关键词</text>
+                </g>
+                <g class="node">
+                    <rect x="792" y="346" width="168" height="48" rx="7" stroke="#d9a670"/>
+                    <text x="876" y="364">语义重排 Rerank</text>
+                    <text class="tag-txt" x="876" y="382">Cross-Encoder</text>
+                </g>
+                <g class="node">
+                    <rect x="978" y="346" width="168" height="48" rx="7" stroke="#d9a670"/>
+                    <text x="1062" y="364">上下文组装</text>
+                    <text class="tag-txt" x="1062" y="382">截断·去冗余·引用</text>
+                </g>
+                <g class="node">
+                    <rect x="606" y="404" width="168" height="40" rx="7" stroke="#d9a670"/>
+                    <text x="690" y="424">多路召回融合</text>
+                </g>
+                <g class="node">
+                    <rect x="792" y="404" width="168" height="40" rx="7" stroke="#d9a670"/>
+                    <text x="876" y="424">知识图谱补全</text>
+                </g>
+                <g class="node dashed">
+                    <rect x="978" y="404" width="168" height="40" rx="7" stroke="#ddb98a"/>
+                    <text x="1062" y="424">时效性知识召回</text>
+                </g>
+            </g>
+
+            <!-- 知识库 → 检索（横向） -->
+            <path class="flow-strong" d="M524,376 L570,376"/>
+            <text class="flow-label" x="547" y="366">向量库</text>
+
+            <!-- 检索 → 生成 -->
+            <path class="flow-strong" d="M876,454 L876,486"/>
+            <text class="flow-label" x="944" y="474">Top-K 片段</text>
+
+            <!-- ============================================================
+                 4. 大模型推理生成层  y: 488 - 606
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="488" width="1148" height="118" rx="10"
+                      fill="#7b5ea7" stroke="#7b5ea7"/>
+                <line class="layer-bar" x1="16" y1="500" x2="16" y2="594" stroke="#7b5ea7"/>
+                <text class="layer-name" x="34" y="508" fill="#7b5ea7">⑤ 大模型推理与生成层</text>
+                <text class="layer-tag" x="34" y="526">Prompt 编排 · 生成 · 安全对齐</text>
+
+                <g class="node accent">
+                    <rect x="180" y="542" width="172" height="52" rx="7" stroke="#7b5ea7" fill="#f5f1fb"/>
+                    <text x="266" y="560">Prompt 编排</text>
+                    <text class="tag-txt" x="266" y="580">模板·Few-shot·引用注入</text>
+                </g>
+                <g class="node accent">
+                    <rect x="372" y="542" width="172" height="52" rx="7" stroke="#7b5ea7" fill="#f5f1fb"/>
+                    <text x="458" y="560">LLM 生成</text>
+                    <text class="tag-txt" x="458" y="580">本地模型 / API 模型</text>
+                </g>
+                <g class="node">
+                    <rect x="564" y="542" width="160" height="52" rx="7" stroke="#a897c6"/>
+                    <text x="644" y="560">Function Calling</text>
+                    <text class="tag-txt" x="644" y="580">订单/物流查询</text>
+                </g>
+                <g class="node">
+                    <rect x="744" y="542" width="160" height="52" rx="7" stroke="#a897c6"/>
+                    <text x="824" y="560">多轮对话记忆</text>
+                    <text class="tag-txt" x="824" y="580">摘要·长期记忆</text>
+                </g>
+                <g class="node">
+                    <rect x="924" y="542" width="150" height="52" rx="7" stroke="#a897c6"/>
+                    <text x="999" y="560">答案校验</text>
+                    <text class="tag-txt" x="999" y="580">幻觉检测·事实核对</text>
+                </g>
+                <g class="node dashed">
+                    <rect x="1094" y="542" width="60" height="52" rx="7" stroke="#c3b6d8"/>
+                    <text x="1124" y="560">安全</text>
+                    <text class="tag-txt" x="1124" y="580">对齐</text>
+                </g>
+            </g>
+
+            <!-- 生成 → 服务 -->
+            <path class="flow-strong" d="M590,608 L590,646"/>
+            <text class="flow-label" x="662" y="630">带引用的答案</text>
+
+            <!-- ============================================================
+                 5. 在线服务与输出层  y: 648 - 736
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="648" width="1148" height="88" rx="10"
+                      fill="#2f7fbf" stroke="#2f7fbf"/>
+                <line class="layer-bar" x1="16" y1="660" x2="16" y2="724" stroke="#2f7fbf"/>
+                <text class="layer-name" x="34" y="668" fill="#2f7fbf">⑥ 答案输出与在线服务</text>
+                <text class="layer-tag" x="34" y="686">流式响应 · 人工兜底</text>
+
+                <g class="node">
+                    <rect x="200" y="668" width="180" height="50" rx="7" stroke="#7fb3d8"/>
+                    <text x="290" y="693">流式答案返回</text>
+                </g>
+                <g class="node">
+                    <rect x="402" y="668" width="180" height="50" rx="7" stroke="#7fb3d8"/>
+                    <text x="492" y="693">溯源引用展示</text>
+                </g>
+                <g class="node">
+                    <rect x="604" y="668" width="180" height="50" rx="7" stroke="#7fb3d8"/>
+                    <text x="694" y="693">满意度评价</text>
+                </g>
+                <g class="node accent">
+                    <rect x="806" y="668" width="180" height="50" rx="7" stroke="#2f7fbf" fill="#eef6fc"/>
+                    <text x="896" y="693">转人工坐席</text>
+                </g>
+                <g class="node">
+                    <rect x="1008" y="668" width="156" height="50" rx="7" stroke="#7fb3d8"/>
+                    <text x="1086" y="693">工单生成</text>
+                </g>
+            </g>
+
+            <!-- ============================================================
+                 6. 数据存储与基础设施层  y: 764 - 874
+            ============================================================ -->
+            <g>
+                <rect class="layer-bg" x="16" y="764" width="1148" height="110" rx="10"
+                      fill="#8d9aa8" stroke="#8d9aa8"/>
+                <line class="layer-bar" x1="16" y1="776" x2="16" y2="862" stroke="#8d9aa8"/>
+                <text class="layer-name" x="34" y="784" fill="#7d8b99">⑦ 数据存储与基础设施</text>
+                <text class="layer-tag" x="34" y="802">持久化 · 向量库 · 算力</text>
+
+                <g class="node">
+                    <rect x="120" y="818" width="152" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="196" y="840">向量数据库</text>
+                </g>
+                <g class="node">
+                    <rect x="288" y="818" width="152" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="364" y="840">业务数据库</text>
+                </g>
+                <g class="node">
+                    <rect x="456" y="818" width="152" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="532" y="840">会话日志库</text>
+                </g>
+                <g class="node">
+                    <rect x="624" y="818" width="152" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="700" y="840">对象存储</text>
+                </g>
+                <g class="node">
+                    <rect x="792" y="818" width="152" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="868" y="840">GPU 推理集群</text>
+                </g>
+                <g class="node">
+                    <rect x="960" y="818" width="204" height="44" rx="7" stroke="#aab6c3"/>
+                    <text x="1062" y="840">监控 / 日志 / 链路追踪</text>
+                </g>
+            </g>
+
+            <!-- 服务 → 存储 -->
+            <path class="flow" d="M590,738 L590,764"/>
+
+            <!-- ============================================================
+                 8. 评测与反馈闭环（右侧纵向虚线回路）
+            ============================================================ -->
+            <g>
+                <!-- 右侧评测模块 -->
+                <g class="node dashed">
+                    <rect x="16" y="900" width="1148" height="60" rx="10" stroke="#c9a24b" fill="#fdf8ec"/>
+                    <text x="150" y="922" style="text-anchor:start;font-weight:bold;fill:#a8832b">⑧ 评测与反馈闭环</text>
+                    <text x="150" y="944" style="text-anchor:start;font-size:11.5px;fill:#9c8b5e">
+                        离线评测集 · 召回率/准确率 · 幻觉率 · 人工标注回流
+                    </text>
+                </g>
+                <!-- 反馈回路箭头：从评测回到知识库 -->
+                <path class="flow-dash" d="M1120,900 L1120,700 L1160,700 L1160,380 L1146,380"
+                      stroke="#d8b46a" marker-end="url(#arrow)"/>
+                <text class="flow-label" x="1160" y="520" style="fill:#b0944f"
+                      transform="rotate(90 1160 520)">知识/策略迭代回流</text>
+            </g>
+
+            <!-- 底部科研视角注释 -->
+            <g class="note-box">
+                <rect x="16" y="978" width="1148" height="42" rx="8"/>
+                <text x="34" y="1004" style="text-anchor:start">
+                    科研关注点：检索质量（Recall@K / MRR）→ 生成忠实度（Faithfulness）→ 答案可用性（人工评分），
+                    构成"知识—检索—生成—评测"可量化闭环
+                </text>
+            </g>
+        </svg>
+    </div>
+
+    <div class="legend-wrap">
+        <span><i style="background:#eef6fc;border-color:#2f7fbf"></i>核心链路模块</span>
+        <span><i style="background:#fff;border-color:#7fb3d8"></i>功能模块</span>
+        <span><i style="background:#fff;border-color:#aab6c3;border-style:dashed"></i>可选/扩展模块</span>
+        <span><i style="background:#fdf8ec;border-color:#c9a24b"></i>评测反馈闭环</span>
+        <span><i style="background:#8fa9c4;border:none;height:3px"></i>主数据流</span>
+        <span><i style="background:#c3cfdd;border:none;height:3px"></i>反馈流</span>
+    </div>
+
+    <div class="footnote">
+        <b>架构说明：</b>用户 Query 经接入层完成鉴权、会话恢复与意图识别后，进入 RAG 检索增强链路：
+        先在向量库与知识图谱中做混合召回，再由 Rerank 模型语义重排，取 Top-K 片段组装上下文；
+        大模型在注入上下文的 Prompt 下生成答案，并经过幻觉检测与安全对齐后流式返回。
+        低置信度或用户主动要求时转人工坐席，会话与评价数据回流至知识治理与评测模块，形成持续迭代闭环。
+    </div>
+</body>
+</html>

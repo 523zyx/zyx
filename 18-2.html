@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：Canvas 绘制的电商系统架构图
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-2 电商系统架构图</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #eef2f7;
+            font-family: "Microsoft YaHei", sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+            padding: 30px 20px 50px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #1f3552;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #7089a3;
+            margin-bottom: 22px;
+        }
+
+        .board {
+            max-width: 1180px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(31, 53, 82, .12);
+            padding: 18px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .legend {
+            max-width: 1180px;
+            margin: 18px auto 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            font-size: 12.5px;
+            color: #5c7186;
+        }
+        .legend span {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .legend i {
+            width: 13px;
+            height: 13px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>电商系统 · 全站架构图</h1>
+    <p class="sub">鼠标移到模块上可高亮查看，数据从用户侧一路流向底层数据存储</p>
+
+    <div class="board">
+        <canvas id="arch"></canvas>
+    </div>
+
+    <div class="legend">
+        <span><i style="background:#4a90d2"></i>接入层</span>
+        <span><i style="background:#5aa469"></i>应用/服务层</span>
+        <span><i style="background:#e08a3c"></i>业务中台</span>
+        <span><i style="background:#8c6bb1"></i>服务治理与支撑</span>
+        <span><i style="background:#c75c5c"></i>数据与存储层</span>
+        <span><i style="background:#7f8c9b"></i>基础设施层</span>
+    </div>
+
+    <script>
+        (function () {
+            var canvas = document.getElementById("arch");
+            var ctx = canvas.getContext("2d");
+
+            /* ============================================================
+               设计坐标系：固定 1180 x 980，再按容器宽度整体缩放，
+               这样无论在什么屏幕上布局都不会乱。
+            ============================================================ */
+            var DW = 1180, DH = 980;
+            var dpr = window.devicePixelRatio || 1;
+
+            function setupCanvas() {
+                var cssW = canvas.parentElement.clientWidth - 36;   // 减去 padding
+                var scale = cssW / DW;
+                canvas.style.width = cssW + "px";
+                canvas.style.height = (DH * scale) + "px";
+                canvas.width = DW * dpr;
+                canvas.height = DH * dpr;
+                // 把设计坐标系 (1180 x 980) 一次性映射到实际画布像素
+                ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+            }
+
+            /* ============================================================
+               颜色主题
+               ============================================================ */
+            var THEME = {
+                access:  "#4a90d2",
+                service: "#5aa469",
+                middle:  "#e08a3c",
+                gov:     "#8c6bb1",
+                data:    "#c75c5c",
+                infra:   "#7f8c9b",
+                line:    "#c3cfdd",
+                text:    "#2c3e50"
+            };
+
+            /* ============================================================
+               图元数据
+               layer：所属层（决定颜色），box：[x, y, w, h]，items：内部小格子
+               ============================================================ */
+            var layers = [
+                {
+                    title: "用 户 层",
+                    color: THEME.access,
+                    y: 30, h: 78,
+                    note: "PC 商城 · 移动 App · 微信小程序 · H5 活动页",
+                    boxes: []
+                },
+                {
+                    title: "接 入 层",
+                    color: THEME.access,
+                    y: 130, h: 96,
+                    boxes: [
+                        { x: 130, y: 152, w: 200, h: 54, label: "CDN 静态加速" },
+                        { x: 360, y: 152, w: 200, h: 54, label: "Nginx 负载均衡" },
+                        { x: 590, y: 152, w: 200, h: 54, label: "API 网关" },
+                        { x: 820, y: 152, w: 200, h: 54, label: "用户鉴权 / 限流" }
+                    ]
+                },
+                {
+                    title: "应用服务层（微服务）",
+                    color: THEME.service,
+                    y: 248, h: 104,
+                    boxes: [
+                        { x: 130, y: 272, w: 152, h: 58, label: "商品服务" },
+                        { x: 298, y: 272, w: 152, h: 58, label: "订单服务" },
+                        { x: 466, y: 272, w: 152, h: 58, label: "库存服务" },
+                        { x: 634, y: 272, w: 152, h: 58, label: "支付服务" },
+                        { x: 802, y: 272, w: 152, h: 58, label: "会员服务" },
+                        { x: 970, y: 272, w: 100, h: 58, label: "搜索服务" }
+                    ]
+                },
+                {
+                    title: "业务中台",
+                    color: THEME.middle,
+                    y: 374, h: 104,
+                    boxes: [
+                        { x: 130, y: 398, w: 240, h: 58, label: "营销中心（优惠券/秒杀）" },
+                        { x: 390, y: 398, w: 240, h: 58, label: "交易中心（购物车/结算）" },
+                        { x: 650, y: 398, w: 240, h: 58, label: "内容中心（评价/晒单）" },
+                        { x: 910, y: 398, w: 160, h: 58, label: "物流中心" }
+                    ]
+                },
+                {
+                    title: "服务治理 / 支撑组件",
+                    color: THEME.gov,
+                    y: 500, h: 96,
+                    boxes: [
+                        { x: 130, y: 524, w: 132, h: 52, label: "注册中心" },
+                        { x: 278, y: 524, w: 132, h: 52, label: "配置中心" },
+                        { x: 426, y: 524, w: 132, h: 52, label: "消息队列" },
+                        { x: 574, y: 524, w: 132, h: 52, label: "分布式事务" },
+                        { x: 722, y: 524, w: 132, h: 52, label: "任务调度" },
+                        { x: 870, y: 524, w: 132, h: 52, label: "监控告警" },
+                        { x: 1018, y: 524, w: 52, h: 52, label: "日志" }
+                    ]
+                },
+                {
+                    title: "数据与存储层",
+                    color: THEME.data,
+                    y: 618, h: 118,
+                    boxes: [
+                        { x: 130, y: 646, w: 160, h: 68, label: "MySQL", sub: "主从集群" },
+                        { x: 310, y: 646, w: 160, h: 68, label: "Redis", sub: "缓存/会话" },
+                        { x: 490, y: 646, w: 160, h: 68, label: "Elasticsearch", sub: "商品检索" },
+                        { x: 670, y: 646, w: 160, h: 68, label: "RabbitMQ", sub: "异步解耦" },
+                        { x: 850, y: 646, w: 100, h: 68, label: "OSS", sub: "图片存储" },
+                        { x: 970, y: 646, w: 100, h: 68, label: "Hadoop", sub: "离线分析" }
+                    ]
+                },
+                {
+                    title: "基础设施层",
+                    color: THEME.infra,
+                    y: 758, h: 84,
+                    boxes: [
+                        { x: 130, y: 780, w: 230, h: 46, label: "云服务器 / 容器 Docker" },
+                        { x: 380, y: 780, w: 230, h: 46, label: "Kubernetes 编排" },
+                        { x: 630, y: 780, w: 230, h: 46, label: "备份 / 容灾" },
+                        { x: 880, y: 780, w: 190, h: 46, label: "安全防护 WAF" }
+                    ]
+                }
+            ];
+
+            /* 层与层之间的连接线：from 层序号 → to 层序号 */
+            var links = [
+                { from: 0, to: 1 },
+                { from: 1, to: 2 },
+                { from: 2, to: 3 },
+                { from: 3, to: 4 },
+                { from: 4, to: 5 },
+                { from: 5, to: 6 }
+            ];
+
+            var hoverBox = null;   // 当前鼠标悬停的模块
+
+            /* ============================================================
+               圆角矩形工具：兼容不支持 roundRect 的旧浏览器
+               ============================================================ */
+            function roundRect(x, y, w, h, r) {
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(x, y, w, h, r);
+                    return;
+                }
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            }
+
+            /* 十六进制色 → rgba 字符串 */
+            function rgba(hex, a) {
+                var n = parseInt(hex.slice(1), 16);
+                return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")";
+            }
+
+            /* ============================================================
+               绘制：整体架构
+               ============================================================ */
+            function draw() {
+                ctx.clearRect(0, 0, DW, DH);
+
+                // 背景网格
+                drawGrid();
+
+                // 先画层与层之间的连接箭头（在方块下方）
+                drawLinks();
+
+                // 逐层绘制
+                for (var i = 0; i < layers.length; i++) {
+                    drawLayer(layers[i]);
+                }
+
+                // 底部说明
+                ctx.fillStyle = "#90a4b8";
+                ctx.font = "13px 'Microsoft YaHei', sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("自顶向下：用户请求 → 接入分发 → 服务编排 → 业务中台 → 存储落地", DW / 2, 902);
+            }
+
+            function drawGrid() {
+                ctx.save();
+                ctx.strokeStyle = "#eef2f7";
+                ctx.lineWidth = 1;
+                for (var x = 0; x <= DW; x += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, DH);
+                    ctx.stroke();
+                }
+                for (var y = 0; y <= DH; y += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(DW, y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            /* 用户层单独绘制：三个圆角胶囊 */
+            function drawUserLayer(layer) {
+                var devices = ["PC 商城", "移动 App", "微信小程序", "H5 活动页"];
+                var totalW = 640, gap = 20;
+                var bw = (totalW - gap * (devices.length - 1)) / devices.length;
+                var startX = (DW - totalW) / 2;
+
+                for (var i = 0; i < devices.length; i++) {
+                    var x = startX + i * (bw + gap);
+                    var y = layer.y + 8;
+                    var h = layer.h - 16;
+
+                    ctx.save();
+                    ctx.fillStyle = rgba(layer.color, .12);
+                    ctx.strokeStyle = rgba(layer.color, .55);
+                    ctx.lineWidth = 1.5;
+                    roundRect(x, y, bw, h, h / 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = THEME.text;
+                    ctx.font = "bold 15px 'Microsoft YaHei', sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(devices[i], x + bw / 2, y + h / 2);
+                    ctx.restore();
+                }
+            }
+
+            function drawLayer(layer) {
+                // 用户层特殊处理
+                if (layer.boxes.length === 0) {
+                    drawUserLayer(layer);
+                    drawLayerLabel(layer);
+                    return;
+                }
+
+                // 层背景（淡色）
+                ctx.save();
+                ctx.fillStyle = rgba(layer.color, .05);
+                ctx.strokeStyle = rgba(layer.color, .3);
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 4]);
+                roundRect(20, layer.y, DW - 40, layer.h, 10);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                drawLayerLabel(layer);
+
+                // 层内的小方块
+                for (var i = 0; i < layer.boxes.length; i++) {
+                    drawBox(layer.boxes[i], layer.color);
+                }
+            }
+
+            function drawLayerLabel(layer) {
+                ctx.save();
+                // 左侧竖条
+                ctx.fillStyle = layer.color;
+                roundRect(20, layer.y, 5, layer.h, 3);
+                ctx.fill();
+
+                // 竖排文字（简化：横向小字放在层标题位置）
+                ctx.fillStyle = layer.color;
+                ctx.font = "bold 13px 'Microsoft YaHei', sans-serif";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+                ctx.fillText(layer.title, 40, layer.y + 20);
+                ctx.restore();
+            }
+
+            function drawBox(box, color) {
+                var isHover = (hoverBox === box);
+
+                ctx.save();
+
+                // 阴影
+                ctx.shadowColor = rgba(color, isHover ? .45 : .18);
+                ctx.shadowBlur = isHover ? 18 : 8;
+                ctx.shadowOffsetY = isHover ? 6 : 3;
+
+                // 主体
+                var grad = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.h);
+                if (isHover) {
+                    grad.addColorStop(0, color);
+                    grad.addColorStop(1, shade(color, -18));
+                } else {
+                    grad.addColorStop(0, "#ffffff");
+                    grad.addColorStop(1, rgba(color, .1));
+                }
+                ctx.fillStyle = grad;
+                ctx.strokeStyle = isHover ? color : rgba(color, .5);
+                ctx.lineWidth = isHover ? 2 : 1.2;
+                roundRect(box.x, box.y, box.w, box.h, 7);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+
+                // 文字
+                ctx.fillStyle = isHover ? "#fff" : THEME.text;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                if (box.sub) {
+                    ctx.font = "bold 15px 'Microsoft YaHei', sans-serif";
+                    ctx.fillText(box.label, box.x + box.w / 2, box.y + box.h / 2 - 10);
+                    ctx.font = "12px 'Microsoft YaHei', sans-serif";
+                    ctx.fillStyle = isHover ? rgba("#ffffff", .85) : "#7d8fa3";
+                    ctx.fillText(box.sub, box.x + box.w / 2, box.y + box.h / 2 + 11);
+                } else {
+                    // 文字过长时自动缩小
+                    var size = 14;
+                    ctx.font = "14px 'Microsoft YaHei', sans-serif";
+                    while (ctx.measureText(box.label).width > box.w - 14 && size > 10) {
+                        size--;
+                        ctx.font = size + "px 'Microsoft YaHei', sans-serif";
+                    }
+                    ctx.fillText(box.label, box.x + box.w / 2, box.y + box.h / 2);
+                }
+
+                ctx.restore();
+            }
+
+            /* 简单调亮/调暗颜色 */
+            function shade(hex, percent) {
+                var n = parseInt(hex.slice(1), 16);
+                var r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+                r = Math.max(0, Math.min(255, Math.round(r + r * percent / 100)));
+                g = Math.max(0, Math.min(255, Math.round(g + g * percent / 100)));
+                b = Math.max(0, Math.min(255, Math.round(b + b * percent / 100)));
+                return "rgb(" + r + "," + g + "," + b + ")";
+            }
+
+            /* 层与层之间的中轴箭头 */
+            function drawLinks() {
+                ctx.save();
+                ctx.strokeStyle = THEME.line;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([]);
+
+                for (var i = 0; i < links.length; i++) {
+                    var a = layers[links[i].from];
+                    var b = layers[links[i].to];
+                    var x = DW / 2;
+                    var y1 = a.y + a.h + 2;
+                    var y2 = b.y - 2;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, y1);
+                    ctx.lineTo(x, y2);
+                    ctx.stroke();
+
+                    // 箭头
+                    ctx.beginPath();
+                    ctx.fillStyle = THEME.line;
+                    ctx.moveTo(x, y2);
+                    ctx.lineTo(x - 5, y2 - 8);
+                    ctx.lineTo(x + 5, y2 - 8);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            /* ============================================================
+               交互：悬停高亮
+               ============================================================ */
+            function toDesignCoords(e) {
+                var rect = canvas.getBoundingClientRect();
+                // 画布 CSS 尺寸 ÷ 设计宽度 = 当前缩放比
+                var scale = DW / rect.width;
+                return {
+                    x: (e.clientX - rect.left) * scale,
+                    y: (e.clientY - rect.top) * scale
+                };
+            }
+
+            canvas.addEventListener("mousemove", function (e) {
+                var pt = toDesignCoords(e);
+                var found = null;
+                for (var i = 0; i < layers.length; i++) {
+                    var boxes = layers[i].boxes;
+                    for (var j = 0; j < boxes.length; j++) {
+                        var b = boxes[j];
+                        if (pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) {
+                            found = b;
+                            break;
+                        }
+                    }
+                    if (found) break;
+                }
+                if (found !== hoverBox) {
+                    hoverBox = found;
+                    canvas.style.cursor = found ? "pointer" : "default";
+                    draw();
+                }
+            });
+
+            canvas.addEventListener("mouseleave", function () {
+                if (hoverBox) {
+                    hoverBox = null;
+                    draw();
+                }
+            });
+
+            /* ============================================================
+               启动
+               ============================================================ */
+            setupCanvas();
+            draw();
+
+            var t;
+            window.addEventListener("resize", function () {
+                clearTimeout(t);
+                t = setTimeout(function () {
+                    setupCanvas();
+                    draw();
+                }, 120);
+            });
+        })();
+    </script>
+</body>
+</html>

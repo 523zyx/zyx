@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：基于 Mermaid 的智能客服系统流程图与 ER 图
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-6 Mermaid 智能客服系统流程图 + ER 图</title>
+    <script src="cdn/mermaid/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #eef1f6;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            color: #22303f;
+            padding: 30px 20px 60px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #17304d;
+            margin-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            font-size: 13px;
+            color: #6c8299;
+            line-height: 1.9;
+            margin-bottom: 26px;
+        }
+        .sub code {
+            font-family: Consolas, monospace;
+            background: #e0e7f0;
+            color: #2a5d8f;
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 9px 26px;
+            background: #fff;
+            border: 1px solid #d8e0ea;
+            border-radius: 22px;
+            font-size: 14px;
+            color: #55697d;
+            cursor: pointer;
+            transition: all .2s;
+            user-select: none;
+        }
+        .tab:hover { border-color: #4a90d2; color: #2a6fae; }
+        .tab.active {
+            background: #2f7fbf;
+            border-color: #2f7fbf;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(47, 127, 191, .3);
+        }
+
+        .panel {
+            max-width: 1180px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(23, 48, 77, .1);
+            padding: 26px 22px;
+            overflow-x: auto;
+        }
+        .panel[hidden] { display: none; }
+
+        .panel-title {
+            font-size: 15px;
+            color: #47617c;
+            padding-left: 12px;
+            border-left: 4px solid #2f7fbf;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+        .panel-title small {
+            display: block;
+            font-weight: normal;
+            font-size: 12.5px;
+            color: #8ba0b3;
+            margin-top: 3px;
+        }
+
+        /* 居中显示 mermaid 生成的 SVG */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 加载 / 报错提示 */
+        .status {
+            text-align: center;
+            font-size: 13px;
+            color: #93a6b8;
+            padding: 40px 0;
+        }
+        .status.err { color: #c75c5c; }
+
+        .note {
+            max-width: 1180px;
+            margin: 22px auto 0;
+            font-size: 12.5px;
+            color: #7c8b9a;
+            line-height: 2;
+            border-left: 3px solid #cfd9e4;
+            padding-left: 14px;
+        }
+        .note b { color: #47617c; }
+    </style>
+</head>
+<body>
+    <h1>智能客服系统 · 流程图与 ER 图</h1>
+    <p class="sub">
+        Mermaid 用纯文本生成图表，依赖 <code>cdn/mermaid/mermaid.min.js</code>，可直接嵌入 Markdown / 文档
+    </p>
+
+    <div class="tabs">
+        <div class="tab active" data-panel="flow">业务流程图</div>
+        <div class="tab" data-panel="er">数据库 ER 图</div>
+        <div class="tab" data-panel="seq">会话时序图</div>
+    </div>
+
+    <!-- ==================== 流程画面板 ==================== -->
+    <div class="panel" id="panel-flow">
+        <div class="panel-title">
+            智能客服问答业务流程
+            <small>从用户提问、意图识别、知识检索到答案生成与人工兜底的完整链路</small>
+        </div>
+        <div class="mermaid" id="flowChart">
+flowchart TD
+    A([用户发起咨询]) --> B[接入网关<br/>鉴权 · 限流]
+    B --> C{会话已存在?}
+    C -- 否 --> C1[创建新会话<br/>记录用户画像]
+    C -- 是 --> C2[加载历史上下文]
+    C1 --> D[Query 预处理<br/>纠错 · 改写 · 指代消解]
+    C2 --> D
+    D --> E[意图识别<br/>分类模型 + NER 槽位]
+    E --> F{意图类型}
+
+    F -- 寒暄/闲聊 --> G1[闲聊模型生成]
+    F -- 业务咨询 --> G2[知识库混合召回<br/>向量 + BM25]
+    F -- 订单/物流 --> G3[调用业务接口<br/>Function Calling]
+    F -- 投诉/情绪激烈 --> H1[转人工坐席]
+
+    G2 --> I[语义重排 Rerank]
+    I --> J{相关性达标?}
+    J -- 否 --> H1
+    J -- 是 --> K[上下文组装<br/>注入 Prompt]
+    G3 --> K
+    G1 --> L
+    K --> L[大模型生成答案]
+    L --> M[幻觉检测与事实核验]
+    M --> N{答案可信?}
+    N -- 否 --> H1
+    N -- 是 --> O[流式返回答案<br/>附带知识来源引用]
+    O --> P[用户满意度评价]
+    H1 --> Q[人工坐席处理]
+    Q --> R[工单归档]
+    P --> S[(会话日志入库)]
+    R --> S
+    S --> T[知识沉淀与模型迭代]
+    T -. 反馈回流 .-> G2
+    T -. 优化策略 .-> E
+
+    style A fill:#eef6fc,stroke:#2f7fbf,stroke-width:1.6px
+    style B fill:#eef6fc,stroke:#2f7fbf
+    style E fill:#fdf6ee,stroke:#e08a3c
+    style G2 fill:#eef7f2,stroke:#3f9a73
+    style I fill:#eef7f2,stroke:#3f9a73
+    style K fill:#f5f1fb,stroke:#7b5ea7
+    style L fill:#f5f1fb,stroke:#7b5ea7
+    style M fill:#f5f1fb,stroke:#7b5ea7
+    style O fill:#eef6fc,stroke:#2f7fbf
+    style H1 fill:#fdeeee,stroke:#c75c5c
+    style Q fill:#fdeeee,stroke:#c75c5c
+    style S fill:#f4f6f8,stroke:#8d9aa8
+    style T fill:#fdf8ec,stroke:#c9a24b
+        </div>
+    </div>
+
+    <!-- ==================== ER 图面板 ==================== -->
+    <div class="panel" id="panel-er" hidden>
+        <div class="panel-title">
+            数据库实体关系图（ER Diagram）
+            <small>用户、会话、消息、知识文档、知识切片、意图标签与评价工单的关联建模</small>
+        </div>
+        <div class="mermaid" id="erChart">
+erDiagram
+    USER ||--o{ CONVERSATION : "发起"
+    USER ||--o{ FEEDBACK : "提交"
+    CONVERSATION ||--o{ MESSAGE : "包含"
+    CONVERSATION ||--o{ FEEDBACK : "关联"
+    MESSAGE ||--o{ RETRIEVAL_HIT : "引用"
+    KNOWLEDGE_DOC ||--o{ KNOWLEDGE_CHUNK : "切分为"
+    KNOWLEDGE_CHUNK ||--o{ RETRIEVAL_HIT : "被命中"
+    INTENT ||--o{ MESSAGE : "标注"
+    CONVERSATION ||--o{ TICKET : "升级为"
+
+    USER {
+        bigint user_id PK "用户主键"
+        varchar nickname "昵称"
+        varchar phone "手机号"
+        varchar member_level "会员等级"
+        datetime created_at "注册时间"
+    }
+
+    CONVERSATION {
+        bigint conv_id PK "会话主键"
+        bigint user_id FK "所属用户"
+        varchar channel "接入渠道"
+        varchar status "会话状态"
+        datetime start_time "开始时间"
+        datetime end_time "结束时间"
+    }
+
+    MESSAGE {
+        bigint msg_id PK "消息主键"
+        bigint conv_id FK "所属会话"
+        varchar sender_role "发送方角色"
+        text content "消息内容"
+        bigint intent_id FK "意图标签"
+        decimal confidence "置信度"
+        datetime created_at "发送时间"
+    }
+
+    INTENT {
+        bigint intent_id PK "意图主键"
+        varchar intent_name "意图名称"
+        varchar category "一级分类"
+        boolean need_human "是否转人工"
+    }
+
+    KNOWLEDGE_DOC {
+        bigint doc_id PK "文档主键"
+        varchar title "文档标题"
+        varchar source "来源渠道"
+        varchar doc_type "文档类型"
+        datetime updated_at "更新时间"
+    }
+
+    KNOWLEDGE_CHUNK {
+        bigint chunk_id PK "切片主键"
+        bigint doc_id FK "所属文档"
+        text chunk_text "切片内容"
+        int token_len "token长度"
+        varchar embedding_ref "向量引用"
+    }
+
+    RETRIEVAL_HIT {
+        bigint hit_id PK "命中主键"
+        bigint msg_id FK "所属消息"
+        bigint chunk_id FK "命中切片"
+        decimal score "相似度得分"
+        int rank_no "重排名次"
+    }
+
+    FEEDBACK {
+        bigint fb_id PK "评价主键"
+        bigint conv_id FK "所属会话"
+        bigint user_id FK "评价用户"
+        int star_level "满意度星级"
+        varchar comment "评价内容"
+    }
+
+    TICKET {
+        bigint ticket_id PK "工单主键"
+        bigint conv_id FK "关联会话"
+        varchar reason "转人工原因"
+        varchar handler "处理人"
+        varchar state "工单状态"
+    }
+        </div>
+    </div>
+
+    <!-- ==================== 时序图面板 ==================== -->
+    <div class="panel" id="panel-seq" hidden>
+        <div class="panel-title">
+            一次问答的时序图
+            <small>前端 → 网关 → 对话服务 → 检索服务 → 大模型 → 数据层的调用顺序</small>
+        </div>
+        <div class="mermaid" id="seqChart">
+sequenceDiagram
+    autonumber
+    participant U as 用户端
+    participant G as API 网关
+    participant C as 对话服务
+    participant R as 检索服务
+    participant K as 向量知识库
+    participant L as 大模型服务
+    participant D as 数据库
+
+    U->>G: 发送问题（含 sessionId）
+    G->>G: 鉴权 / 限流校验
+    G->>C: 转发请求
+    C->>D: 读取历史上下文
+    D-->>C: 返回近 N 轮对话
+    C->>C: 意图识别 + Query 改写
+    alt 业务咨询类意图
+        C->>R: 检索请求（query, topK）
+        R->>K: 向量检索 + 关键词召回
+        K-->>R: 候选切片列表
+        R->>R: Rerank 语义重排
+        R-->>C: Top-K 知识与得分
+        C->>L: Prompt（上下文 + 问题）
+        L-->>C: 生成答案（流式）
+    else 订单查询类意图
+        C->>D: 查询订单/物流状态
+        D-->>C: 业务数据
+        C->>L: 结构化结果转自然语言
+        L-->>C: 生成答案
+    else 需人工介入
+        C->>D: 创建转人工工单
+        D-->>C: 工单号
+        C-->>U: 提示已转接人工
+    end
+    C->>D: 写入消息与引用记录
+    C-->>G: SSE 流式返回
+    G-->>U: 逐字推送答案 + 知识来源
+        </div>
+    </div>
+
+    <p class="note">
+        <b>说明：</b>三个图都由 Mermaid 的文本语法描述 —— <code>flowchart</code> 画业务分支，
+        <code>erDiagram</code> 画数据库关系（<code>PK</code> 主键 / <code>FK</code> 外键 / <code>||--o{</code> 一对多），
+        <code>sequenceDiagram</code> 画调用时序（<code>alt/else</code> 表示分支）。
+        图表在页面加载时由 <code>mermaid.run()</code> 渲染成内联 SVG，可缩放不失真。
+    </p>
+
+    <script>
+        (function () {
+            /* ---------- Mermaid 全局配置 ---------- */
+            mermaid.initialize({
+                startOnLoad: false,          // 手动控制渲染时机
+                theme: "base",
+                securityLevel: "loose",
+                fontFamily: "'Microsoft YaHei', 'PingFang SC', sans-serif",
+                themeVariables: {
+                    fontSize: "14px",
+                    primaryColor: "#eef6fc",
+                    primaryTextColor: "#22303f",
+                    primaryBorderColor: "#7fb3d8",
+                    lineColor: "#8fa9c4",
+                    secondaryColor: "#f5f1fb",
+                    tertiaryColor: "#fdf6ee",
+                    edgeLabelBackground: "#ffffff",
+                    clusterBkg: "#fafbfd"
+                },
+                flowchart: {
+                    curve: "basis",
+                    nodeSpacing: 46,
+                    rankSpacing: 46,
+                    useMaxWidth: true,
+                    htmlLabels: true
+                },
+                er: {
+                    useMaxWidth: true,
+                    entityPadding: 14,
+                    fontSize: 13
+                },
+                sequence: {
+                    useMaxWidth: true,
+                    actorMargin: 60,
+                    boxMargin: 8,
+                    mirrorActors: false,
+                    wrap: true
+                }
+            });
+
+            /* ---------- 渲染指定 id 的图表（只渲染一次，避免重复插入 SVG） ---------- */
+            var rendered = {};
+
+            function render(elId) {
+                if (rendered[elId]) return;
+                var el = document.getElementById(elId);
+                if (!el) return;
+                try {
+                    // mermaid.run 会读取元素内文本作为图定义
+                    mermaid.run({ nodes: [el] });
+                    rendered[elId] = true;
+                } catch (err) {
+                    el.innerHTML = '<p class="status err">图表渲染失败：' + err.message + "</p>";
+                }
+            }
+
+            /* ---------- 标签页切换 ---------- */
+            var tabs = document.querySelectorAll(".tab");
+            tabs.forEach(function (tab) {
+                tab.addEventListener("click", function () {
+                    tabs.forEach(function (t) { t.classList.remove("active"); });
+                    tab.classList.add("active");
+
+                    var key = tab.getAttribute("data-panel");
+                    document.getElementById("panel-flow").hidden = (key !== "flow");
+                    document.getElementById("panel-er").hidden = (key !== "er");
+                    document.getElementById("panel-seq").hidden = (key !== "seq");
+
+                    // 首次切到某个标签时才渲染，减少一次性渲染压力
+                    if (key === "er") render("erChart");
+                    if (key === "seq") render("seqChart");
+                });
+            });
+
+            /* ---------- 首屏只渲染流程图 ---------- */
+            render("flowChart");
+        })();
+    </script>
+</body>
+</html>

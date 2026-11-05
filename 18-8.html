@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<!--
+    作者：周雨欣
+    建立时间：2026-11-05
+    使用大模型：DeepSeek-V4.1-Flash
+    功能名称：基于 ECharts 的数据大屏（三列布局，中间上部为地理信息动态飞线圈）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-8 数据大屏</title>
+    <script src="cdn/echarts/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: #050c1a;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            color: #cfe6ff;
+        }
+
+        /* ================= 大屏容器：按 1920x1080 设计稿等比缩放 ================= */
+        #screen {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 1920px;
+            height: 1080px;
+            transform-origin: center center;
+            background:
+                radial-gradient(ellipse at 50% 0%, #0d2748 0%, #071227 45%, #050c1a 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 0 24px 22px;
+        }
+        /* 背景网格 */
+        #screen::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(64, 158, 255, .05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(64, 158, 255, .05) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* ================= 顶部标题 ================= */
+        header {
+            position: relative;
+            height: 92px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        header h1 {
+            font-size: 34px;
+            letter-spacing: 6px;
+            font-weight: bold;
+            background: linear-gradient(180deg, #ffffff 10%, #6fd0ff 90%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 24px rgba(64, 158, 255, .5);
+        }
+        /* 标题两侧装饰线 */
+        header .deco {
+            position: absolute;
+            top: 46px;
+            width: 420px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(64, 158, 255, .85));
+        }
+        header .deco.l { left: 60px; }
+        header .deco.r {
+            right: 60px;
+            background: linear-gradient(270deg, transparent, rgba(64, 158, 255, .85));
+        }
+        /* 顶部时间 */
+        header .clock {
+            position: absolute;
+            right: 70px;
+            top: 40px;
+            font-family: Consolas, monospace;
+            font-size: 16px;
+            color: #7fc4f0;
+            letter-spacing: 1px;
+        }
+        header .clock span {
+            color: #ffd479;
+        }
+
+        /* ================= 三列主体 ================= */
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.42fr 1fr;
+            gap: 18px;
+            min-height: 0;
+        }
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 0;
+        }
+
+        /* ================= 卡片 ================= */
+        .card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(16, 48, 88, .55) 0%, rgba(8, 24, 46, .55) 100%);
+            border: 1px solid rgba(64, 158, 255, .28);
+            border-radius: 6px;
+            padding: 12px 14px 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* 四角高亮 */
+        .card::before,
+        .card::after {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-color: #3fa9ff;
+            border-style: solid;
+            pointer-events: none;
+        }
+        .card::before {
+            left: -1px;
+            top: -1px;
+            border-width: 2px 0 0 2px;
+        }
+        .card::after {
+            right: -1px;
+            bottom: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .card-title {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 16px;
+            color: #9fd2ff;
+            letter-spacing: 1px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(64, 158, 255, .16);
+            margin-bottom: 8px;
+        }
+        .card-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 15px;
+            background: linear-gradient(180deg, #3fa9ff, #1c6fbd);
+            border-radius: 2px;
+            margin-right: 9px;
+        }
+        .card-title .unit {
+            font-size: 12px;
+            color: #5c86ad;
+        }
+
+        .chart {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+
+        /* ================= 中间顶部：地理飞线圈 ================= */
+        .map-card {
+            flex: 1.32;
+        }
+        .map-card .chart {
+            position: relative;
+        }
+
+        /* ================= 中间底部：指标 + 排行 ================= */
+        .mid-bottom {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* 数据块小卡片（用于数字看板） */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            flex-shrink: 0;
+            margin-bottom: 12px;
+        }
+        .kpi {
+            position: relative;
+            background: linear-gradient(180deg, rgba(28, 111, 189, .28) 0%, rgba(12, 36, 66, .1) 100%);
+            border: 1px solid rgba(64, 158, 255, .22);
+            border-radius: 5px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        .kpi .num {
+            font-family: Consolas, monospace;
+            font-size: 26px;
+            font-weight: bold;
+            color: #4fd6ff;
+            text-shadow: 0 0 14px rgba(79, 214, 255, .55);
+            line-height: 1.2;
+        }
+        .kpi .num em {
+            font-style: normal;
+            font-size: 13px;
+            color: #7fa8c9;
+            margin-left: 3px;
+        }
+        .kpi .lbl {
+            font-size: 12.5px;
+            color: #86a8c6;
+            margin-top: 4px;
+            letter-spacing: .5px;
+        }
+
+        /* ================= 底部滚动文字（可选装饰） ================= */
+        .ticker {
+            flex-shrink: 0;
+            height: 26px;
+            overflow: hidden;
+            font-size: 12.5px;
+            color: #6f95b5;
+            border-top: 1px dashed rgba(64, 158, 255, .15);
+            padding-top: 6px;
+            line-height: 20px;
+            white-space: nowrap;
+        }
+
+        /* ================= 中间飞线图外的光晕装饰 ================= */
+        .map-glow {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 74%;
+            padding-bottom: 74%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(47, 147, 200, .16) 0%, transparent 68%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div id="screen">
+    <header>
+        <span class="deco l"></span>
+        <h1>全国业务运营数据大屏</h1>
+        <span class="deco r"></span>
+        <div class="clock" id="clock">--:--:--</div>
+    </header>
+
+    <div class="main">
+        <!-- ============ 左列 ============ -->
+        <div class="col">
+            <div class="card" style="flex:1;">
+                <div class="card-title">区域销售额<span class="unit">单位：万元</span></div>
+                <div class="chart" id="chartBar"></div>
+            </div>
+            <div class="card" style="flex:1;">
+                <div class="card-title">订单渠道占比</div>
+                <div class="chart" id="chartPie"></div>
+            </div>
+            <div class="card" style="flex:1;">
+                <div class="card-title">近 12 个月增长趋势<span class="unit">%</span></div>
+                <div class="chart" id="chartLine"></div>
+            </div>
+        </div>
+
+        <!-- ============ 中列 ============ -->
+        <div class="col">
+            <!-- 地理信息飞线圈 -->
+            <div class="card map-card">
+                <div class="card-title">全国业务流向 · 实时监测<span class="unit" id="mapUnit">在线节点 32</span></div>
+                <div class="chart" id="chartMap">
+                    <div class="map-glow"></div>
+                </div>
+            </div>
+
+            <!-- 指标 + 排行 -->
+            <div class="mid-bottom">
+                <div class="kpis">
+                    <div class="kpi">
+                        <div class="num" id="kpi1">0<em>万</em></div>
+                        <div class="lbl">今日成交额</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="num" id="kpi2">0<em>单</em></div>
+                        <div class="lbl">今日订单量</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="num" id="kpi3">0<em>人</em></div>
+                        <div class="lbl">在线客服</div>
+                    </div>
+                </div>
+                <div class="card" style="flex:1;">
+                    <div class="card-title">热门品类实时排行<span class="unit">Top 6</span></div>
+                    <div class="chart" id="chartRank"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 右列 ============ -->
+        <div class="col">
+            <div class="card" style="flex:1;">
+                <div class="card-title">客服满意度雷达</div>
+                <div class="chart" id="chartRadar"></div>
+            </div>
+            <div class="card" style="flex:1.15;">
+                <div class="card-title">各省响应时长 TOP8<span class="unit">秒</span></div>
+                <div class="chart" id="chartHBar"></div>
+            </div>
+            <div class="card" style="flex:1;">
+                <div class="card-title">今日实时告警</div>
+                <div class="ticker" id="ticker"></div>
+                <div class="chart" id="chartGauge"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ================================================================
+       0. 大屏等比缩放：把 1920x1080 的设计稿塞进任意屏幕
+    ================================================================ */
+    (function fitScreen() {
+        var el = document.getElementById("screen");
+
+        function resize() {
+            var scale = Math.min(
+                window.innerWidth / 1920,
+                window.innerHeight / 1080
+            );
+            el.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+        }
+        resize();
+        window.addEventListener("resize", resize);
+    })();
+
+    /* ================================================================
+       1. 公共配置：颜色、字体、通用样式
+    ================================================================ */
+    var AXIS_LINE = "rgba(64, 158, 255, .35)";
+    var SPLIT_LINE = "rgba(64, 158, 255, .12)";
+    var LABEL_COLOR = "#86a8c6";
+    var BLUE = "#3fa9ff";
+    var CYAN = "#4fd6ff";
+    var GREEN = "#4fe0a8";
+    var ORANGE = "#ffb45f";
+    var PINK = "#ff6fa8";
+    var PURPLE = "#9b7bff";
+
+    var FONT = "12px 'Microsoft YaHei', sans-serif";
+
+    var charts = [];
+
+    function init(id) {
+        var dom = document.getElementById(id);
+        var c = echarts.init(dom);
+        charts.push(c);
+        return c;
+    }
+
+    /* ================================================================
+       2. 左上：区域销售额（柱状图，带渐变与角标）
+    ================================================================ */
+    (function () {
+        var chart = init("chartBar");
+        var cat = ["华东", "华南", "华北", "西南", "华中", "东北", "西北"];
+        var val = [3820, 3140, 2680, 1960, 1720, 980, 640];
+
+        chart.setOption({
+            grid: { left: 8, right: 18, top: 22, bottom: 6, containLabel: true },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            xAxis: {
+                type: "category",
+                data: cat,
+                axisLine: { lineStyle: { color: AXIS_LINE } },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 11, interval: 0 }
+            },
+            yAxis: {
+                type: "value",
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 11 },
+                splitLine: { lineStyle: { color: SPLIT_LINE, type: "dashed" } }
+            },
+            series: [
+                {
+                    type: "bar",
+                    barWidth: 16,
+                    data: val,
+                    itemStyle: {
+                        borderRadius: [3, 3, 0, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: "#4fd6ff" },
+                            { offset: 1, color: "rgba(47, 147, 200, .15)" }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: "top",
+                        color: "#9fd2ff",
+                        fontSize: 10.5
+                    }
+                },
+                // 背景槽，做出"容量"感
+                {
+                    type: "bar",
+                    barWidth: 16,
+                    barGap: "-100%",
+                    data: [4200, 4200, 4200, 4200, 4200, 4200, 4200],
+                    itemStyle: { color: "rgba(64, 158, 255, .07)", borderRadius: [3, 3, 0, 0] },
+                    silent: true,
+                    z: -1
+                }
+            ]
+        });
+    })();
+
+    /* ================================================================
+       3. 左中：订单渠道占比（环形图）
+    ================================================================ */
+    (function () {
+        var chart = init("chartPie");
+
+        chart.setOption({
+            tooltip: {
+                trigger: "item",
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 },
+                formatter: "{b}<br/>{c} 单 ({d}%)"
+            },
+            legend: {
+                orient: "vertical",
+                right: 8,
+                top: "center",
+                itemWidth: 9,
+                itemHeight: 9,
+                textStyle: { color: LABEL_COLOR, fontSize: 11.5 },
+                itemGap: 10
+            },
+            series: [
+                {
+                    type: "pie",
+                    radius: ["46%", "68%"],
+                    center: ["36%", "52%"],
+                    avoidLabelOverlap: true,
+                    itemStyle: {
+                        borderColor: "#071227",
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        position: "center",
+                        formatter: "{a|订单}\n{b|12864}",
+                        rich: {
+                            a: { fontSize: 11, color: LABEL_COLOR, lineHeight: 16 },
+                            b: { fontSize: 18, color: CYAN, fontFamily: "Consolas", lineHeight: 22 }
+                        }
+                    },
+                    emphasis: {
+                        label: { show: true },
+                        scaleSize: 6
+                    },
+                    labelLine: { show: false },
+                    data: [
+                        { value: 4820, name: "小程序", itemStyle: { color: CYAN } },
+                        { value: 3240, name: "App", itemStyle: { color: BLUE } },
+                        { value: 2580, name: "网页", itemStyle: { color: GREEN } },
+                        { value: 1420, name: "电话", itemStyle: { color: ORANGE } },
+                        { value: 804, name: "其他", itemStyle: { color: PURPLE } }
+                    ]
+                },
+                // 外圈装饰
+                {
+                    type: "pie",
+                    radius: ["72%", "73%"],
+                    center: ["36%", "52%"],
+                    silent: true,
+                    label: { show: false },
+                    data: [{ value: 1, itemStyle: { color: "rgba(64, 158, 255, .25)" } }]
+                }
+            ]
+        });
+    })();
+
+    /* ================================================================
+       4. 左下：增长趋势（折线 + 面积）
+    ================================================================ */
+    (function () {
+        var chart = init("chartLine");
+        var months = [];
+        for (var i = 1; i <= 12; i++) months.push(i + "月");
+
+        chart.setOption({
+            grid: { left: 6, right: 18, top: 26, bottom: 6, containLabel: true },
+            tooltip: {
+                trigger: "axis",
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            xAxis: {
+                type: "category",
+                boundaryGap: false,
+                data: months,
+                axisLine: { lineStyle: { color: AXIS_LINE } },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 10.5, interval: 1 }
+            },
+            yAxis: {
+                type: "value",
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 11 },
+                splitLine: { lineStyle: { color: SPLIT_LINE, type: "dashed" } }
+            },
+            series: [
+                {
+                    name: "同比增长",
+                    type: "line",
+                    smooth: true,
+                    symbol: "circle",
+                    symbolSize: 5,
+                    data: [8.2, 11.5, 9.8, 15.2, 18.6, 16.4, 21.3, 24.7, 22.1, 27.8, 31.2, 34.6],
+                    lineStyle: {
+                        width: 2.4,
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: "#2f93c8" },
+                            { offset: 1, color: CYAN }
+                        ])
+                    },
+                    itemStyle: { color: CYAN },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: "rgba(79, 214, 255, .42)" },
+                            { offset: 1, color: "rgba(79, 214, 255, .02)" }
+                        ])
+                    }
+                }
+            ]
+        });
+    })();
+
+    /* ================================================================
+       5. 中间上部：地理信息飞线圈（核心图）
+          —— 用极坐标系模拟"世界地图圆盘"：
+             同心圆环 + 经纬网格 + 旋转雷达扫描 + 城市散点 + 飞线
+    ================================================================ */
+    var mapChart = init("chartMap");
+
+    /* 城市：极坐标角度（度）与半径比例（0~1，1 为最外圈） */
+    var CITIES = [
+        { name: "北京", angle: 78,  radius: 0.62, value: 920 },
+        { name: "上海", angle: 98,  radius: 0.58, value: 1180 },
+        { name: "广州", angle: 132, radius: 0.50, value: 760 },
+        { name: "深圳", angle: 145, radius: 0.46, value: 690 },
+        { name: "成都", angle: 46,  radius: 0.44, value: 520 },
+        { name: "西安", angle: 62,  radius: 0.36, value: 380 },
+        { name: "武汉", angle: 92,  radius: 0.44, value: 410 },
+        { name: "杭州", angle: 105, radius: 0.52, value: 580 },
+        { name: "沈阳", angle: 75,  radius: 0.80, value: 260 },
+        { name: "乌鲁木齐", angle: 20, radius: 0.72, value: 180 },
+        { name: "昆明", angle: 30,  radius: 0.30, value: 210 },
+        { name: "哈尔滨", angle: 82,  radius: 0.90, value: 150 }
+    ];
+    /* 中心站 */
+    var HUB = { name: "总部", angle: 0, radius: 0 };
+
+    /* 极坐标 → 直角坐标（用于把飞线画在 geo/polar 之外的散点上） */
+    function polarToXY(angleDeg, radiusRatio) {
+        // geo 坐标系里半径 0~1 对应中心到边缘
+        var rad = angleDeg * Math.PI / 180;
+        return [radiusRatio * Math.cos(rad), radiusRatio * Math.sin(rad)];
+    }
+
+    /* 飞线：从中心（总部）射向各城市的贝塞尔弧线 */
+    var FLY_LINES = CITIES.map(function (c) {
+        var to = polarToXY(c.angle, c.radius);
+        // 控制点：在起终点法线方向外扩，形成弧线
+        var mid = [(0 + to[0]) / 2, (0 + to[1]) / 2];
+        var nx = -to[1], ny = to[0];
+        var len = Math.sqrt(nx * nx + ny * ny) || 1;
+        var k = 0.32;
+        return {
+            name: c.name,
+            value: c.value,
+            coords: [
+                [0, 0],
+                [mid[0] + nx / len * k, mid[1] + ny / len * k],
+                to
+            ]
+        };
+    });
+
+    function mapOption(t) {
+        /* 环形涟漪：随时间旋转的扇区高亮 */
+        return {
+            animationDuration: 600,
+            tooltip: {
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            // ---------- 极坐标：同心圆 + 旋转雷达 ----------
+            polar: {
+                center: ["50%", "50%"],
+                radius: ["0%", "88%"]
+            },
+            angleAxis: {
+                type: "value",
+                min: 0,
+                max: 360,
+                startAngle: 90,
+                show: false
+            },
+            radiusAxis: {
+                type: "value",
+                min: 0,
+                max: 1,
+                show: false
+            },
+            // 同心圆环（模拟地图纬度圈）
+            series: [
+                // 旋转雷达扫描（扇形）
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["0%", "88%"],
+                    center: ["50%", "50%"],
+                    startAngle: 90,
+                    silent: true,
+                    label: { show: false },
+                    labelLine: { show: false },
+                    itemStyle: { borderWidth: 0 },
+                    data: [
+                        { value: 26, itemStyle: { color: "rgba(79, 214, 255, .18)" } },
+                        { value: 42, itemStyle: { color: "rgba(79, 214, 255, .07)" } },
+                        { value: 68, itemStyle: { color: "rgba(79, 214, 255, .025)" } },
+                        { value: 224, itemStyle: { color: "transparent" } }
+                    ],
+                    animationDuration: 0,
+                    z: 1
+                },
+                // 同心圆刻度环
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["24%", "25%"],
+                    center: ["50%", "50%"],
+                    silent: true,
+                    label: { show: false },
+                    itemStyle: { color: "rgba(64, 158, 255, .18)" },
+                    data: [{ value: 1 }],
+                    z: 2
+                },
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["46%", "46.6%"],
+                    center: ["50%", "50%"],
+                    silent: true,
+                    label: { show: false },
+                    itemStyle: { color: "rgba(64, 158, 255, .18)" },
+                    data: [{ value: 1 }],
+                    z: 2
+                },
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["68%", "68.5%"],
+                    center: ["50%", "50%"],
+                    silent: true,
+                    label: { show: false },
+                    itemStyle: { color: "rgba(64, 158, 255, .15)" },
+                    data: [{ value: 1 }],
+                    z: 2
+                },
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["88%", "88.8%"],
+                    center: ["50%", "50%"],
+                    silent: true,
+                    label: { show: false },
+                    itemStyle: { color: "rgba(64, 158, 255, .55)" },
+                    data: [{ value: 1 }],
+                    z: 3
+                },
+                // 外圈刻度（用 60 组"刻度+透明间隔"的小扇形拼出来）
+                {
+                    type: "pie",
+                    coordinateSystem: "none",
+                    radius: ["92%", "95%"],
+                    center: ["50%", "50%"],
+                    silent: true,
+                    label: { show: false },
+                    labelLine: { show: false },
+                    data: (function () {
+                        var out = [];
+                        for (var i = 0; i < 60; i++) {
+                            out.push({
+                                value: 1,
+                                itemStyle: {
+                                    color: i % 5 === 0
+                                        ? "rgba(79, 214, 255, .75)"
+                                        : "rgba(64, 158, 255, .25)"
+                                }
+                            });
+                            out.push({ value: 1.4, itemStyle: { color: "transparent" } });
+                        }
+                        return out;
+                    })(),
+                    z: 3
+                }
+            ]
+        };
+    }
+
+    /* ----------------------------------------------------------------
+       上面 graphic 用百分比不好控，改为在 canvas 上自己画一层背景圆盘：
+       使用一个绝对定位的 <canvas> 铺在 echarts 容器下方，画经纬网格与飞线。
+    ---------------------------------------------------------------- */
+    (function drawMapBackdrop() {
+        var wrap = document.getElementById("chartMap");
+        wrap.style.position = "relative";
+
+        var bg = document.createElement("canvas");
+        bg.id = "mapBg";
+        bg.style.position = "absolute";
+        bg.style.left = "0";
+        bg.style.top = "0";
+        bg.style.width = "100%";
+        bg.style.height = "100%";
+        bg.style.pointerEvents = "none";
+        bg.style.zIndex = "1";
+        wrap.insertBefore(bg, wrap.firstChild);
+
+        // 让 echarts 画布浮在上面
+        var chartCanvas = null;
+        setTimeout(function () {
+            chartCanvas = wrap.querySelector("canvas:not(#mapBg)");
+            if (chartCanvas) {
+                chartCanvas.style.position = "relative";
+                chartCanvas.style.zIndex = "2";
+            }
+        }, 0);
+
+        var ctx = bg.getContext("2d");
+        var W = 0, H = 0;
+        var dpr = window.devicePixelRatio || 1;
+
+        function resizeBg() {
+            var rect = wrap.getBoundingClientRect();
+            // getBoundingClientRect 受 transform 缩放影响，用 offsetWidth 更准确
+            W = wrap.clientWidth;
+            H = wrap.clientHeight;
+            if (!W || !H) return;
+            bg.width = W * dpr;
+            bg.height = H * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        /* 绘制经纬网格 + 城市点 + 飞线动画 */
+        var start = performance.now();
+
+        function draw(now) {
+            requestAnimationFrame(draw);
+            if (!W || !H) resizeBg();
+            if (!W || !H) return;
+
+            ctx.clearRect(0, 0, W, H);
+
+            var cx = W / 2;
+            var cy = H / 2;
+            var R = Math.min(W, H) * 0.44;
+            var t = (now - start) / 1000;
+
+            // ---------- 经纬网格 ----------
+            ctx.lineWidth = 1;
+
+            // 纬线：横向椭圆
+            var lats = [-0.72, -0.42, 0, 0.42, 0.72];
+            lats.forEach(function (ly) {
+                var ry = R * 0.24;
+                var offY = R * ly;
+                var rx = R * Math.sqrt(Math.max(0, 1 - ly * ly));
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + offY * 0.72, rx, ry, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(64, 158, 255, .16)";
+                ctx.stroke();
+            });
+
+            // 经线：纵向椭圆（旋转不同角度）
+            for (var a = 0; a < 180; a += 22.5) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(a * Math.PI / 180);
+                ctx.beginPath();
+                ctx.ellipse(0, 0, R * 0.30, R, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(64, 158, 255, .12)";
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // ---------- 飞线：从中心到各城市，带流光 ----------
+            CITIES.forEach(function (c, i) {
+                var rad = c.angle * Math.PI / 180;
+                var tx = cx + Math.cos(rad) * R * c.radius;
+                var ty = cy + Math.sin(rad) * R * c.radius * 0.72;
+
+                // 控制点在外侧形成弧
+                var mx = (cx + tx) / 2;
+                var my = (cy + ty) / 2;
+                var nx = -(ty - cy), ny = (tx - cx);
+                var len = Math.sqrt(nx * nx + ny * ny) || 1;
+                var k = 0.34;
+                var cxp = mx + nx / len * k * R * 0.5;
+                var cyp = my + ny / len * k * R * 0.5;
+
+                // 静态弧线
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.quadraticCurveTo(cxp, cyp, tx, ty);
+                ctx.strokeStyle = "rgba(79, 214, 255, .28)";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                // 流光：沿二次贝塞尔曲线取点
+                var p = (t * 0.55 + i * 0.07) % 1;
+                var bx = (1 - p) * (1 - p) * cx + 2 * (1 - p) * p * cxp + p * p * tx;
+                var by = (1 - p) * (1 - p) * cy + 2 * (1 - p) * p * cyp + p * p * ty;
+
+                var grad = ctx.createRadialGradient(bx, by, 0, bx, by, 8);
+                grad.addColorStop(0, "rgba(180, 245, 255, .95)");
+                grad.addColorStop(1, "rgba(79, 214, 255, 0)");
+                ctx.beginPath();
+                ctx.fillStyle = grad;
+                ctx.arc(bx, by, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 城市点：呼吸圆点
+                var pulse = 1 + Math.sin(t * 2 + i) * 0.25;
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(79, 214, 255, .9)";
+                ctx.arc(tx, ty, 2.4 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 外圈光晕
+                var hg = ctx.createRadialGradient(tx, ty, 0, tx, ty, 12 * pulse);
+                hg.addColorStop(0, "rgba(79, 214, 255, .35)");
+                hg.addColorStop(1, "rgba(79, 214, 255, 0)");
+                ctx.beginPath();
+                ctx.fillStyle = hg;
+                ctx.arc(tx, ty, 12 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 城市名
+                ctx.font = "11.5px 'Microsoft YaHei', sans-serif";
+                ctx.fillStyle = "rgba(180, 214, 240, .9)";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                var lx = cx + Math.cos(rad) * (R * c.radius + 22);
+                var ly2 = cy + Math.sin(rad) * (R * c.radius * 0.72 + 16);
+                ctx.fillText(c.name, lx, ly2);
+            });
+
+            // ---------- 中心光核 ----------
+            var coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.16);
+            coreGrad.addColorStop(0, "rgba(180, 245, 255, .55)");
+            coreGrad.addColorStop(0.45, "rgba(79, 214, 255, .18)");
+            coreGrad.addColorStop(1, "rgba(79, 214, 255, 0)");
+            ctx.beginPath();
+            ctx.fillStyle = coreGrad;
+            ctx.arc(cx, cy, R * 0.16, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.fillStyle = "#bff0ff";
+            ctx.arc(cx, cy, 3.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+
+        // 尺寸变化时重设背景 canvas
+        window.addEventListener("resize", function () {
+            W = 0;
+            H = 0;
+        });
+        // 大屏 scale 变化不会触发 resize，定时兜底检测
+        setInterval(function () {
+            if (wrap.clientWidth !== W || wrap.clientHeight !== H) {
+                W = wrap.clientWidth;
+                H = wrap.clientHeight;
+                resizeBg();
+            }
+        }, 500);
+    })();
+
+    /* echarts 层：只负责旋转雷达 + 涟漪光圈 */
+    mapChart.setOption(mapOption());
+
+    /* 旋转雷达：只让第 1 个饼图（扫描扇形）转起来，其余为静态环 */
+    (function rotateRadar() {
+        var angle = 90;
+        setInterval(function () {
+            angle = (angle - 3) % 360;
+            mapChart.setOption({ series: [{ startAngle: angle }] });
+        }, 90);
+    })();
+
+    /* ================================================================
+       6. 中下：热门品类排行（横向条形 + 动画）
+    ================================================================ */
+    (function () {
+        var chart = init("chartRank");
+        var names = ["手机数码", "家用电器", "服饰鞋包", "美妆个护", "食品生鲜", "家居家装"];
+        var vals = [9860, 8720, 7640, 6520, 5380, 4210];
+        var maxV = Math.max.apply(null, vals);
+
+        chart.setOption({
+            grid: { left: 6, right: 58, top: 8, bottom: 4, containLabel: true },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            xAxis: {
+                type: "value",
+                max: maxV * 1.12,
+                show: false
+            },
+            yAxis: {
+                type: "category",
+                inverse: true,
+                data: names,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 12 }
+            },
+            series: [
+                {
+                    type: "bar",
+                    barWidth: 11,
+                    showBackground: true,
+                    backgroundStyle: {
+                        color: "rgba(64, 158, 255, .07)",
+                        borderRadius: 6
+                    },
+                    itemStyle: {
+                        borderRadius: 6,
+                        color: function (p) {
+                            var colors = [CYAN, BLUE, GREEN, ORANGE, PINK, PURPLE];
+                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: "rgba(63, 169, 255, .25)" },
+                                { offset: 1, color: colors[p.dataIndex % colors.length] }
+                            ]);
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: "right",
+                        color: "#9fd2ff",
+                        fontSize: 11.5,
+                        formatter: "{c}"
+                    },
+                    data: vals
+                }
+            ]
+        });
+
+        // 数字滚动感：每秒轻微抖动，模拟实时
+        setInterval(function () {
+            var next = vals.map(function (v) {
+                return Math.round(v + (Math.random() - 0.45) * 260);
+            });
+            chart.setOption({ series: [{ data: next }] });
+        }, 3200);
+    })();
+
+    /* ================================================================
+       7. 右上：客服满意度雷达图
+    ================================================================ */
+    (function () {
+        var chart = init("chartRadar");
+
+        chart.setOption({
+            tooltip: {
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            legend: {
+                bottom: 2,
+                itemWidth: 9,
+                itemHeight: 9,
+                textStyle: { color: LABEL_COLOR, fontSize: 11.5 }
+            },
+            radar: {
+                center: ["50%", "46%"],
+                radius: "64%",
+                splitNumber: 4,
+                axisName: { color: LABEL_COLOR, fontSize: 11.5 },
+                axisLine: { lineStyle: { color: "rgba(64, 158, 255, .22)" } },
+                splitLine: { lineStyle: { color: "rgba(64, 158, 255, .22)" } },
+                splitArea: {
+                    areaStyle: {
+                        color: ["rgba(64, 158, 255, .04)", "rgba(64, 158, 255, .01)"]
+                    }
+                },
+                indicator: [
+                    { name: "响应速度", max: 100 },
+                    { name: "解答准确", max: 100 },
+                    { name: "语气亲和", max: 100 },
+                    { name: "解决问题", max: 100 },
+                    { name: "主动服务", max: 100 },
+                    { name: "知识覆盖", max: 100 }
+                ]
+            },
+            series: [
+                {
+                    type: "radar",
+                    symbolSize: 5,
+                    data: [
+                        {
+                            name: "智能客服",
+                            value: [92, 88, 84, 86, 79, 90],
+                            lineStyle: { color: CYAN, width: 2 },
+                            itemStyle: { color: CYAN },
+                            areaStyle: { color: "rgba(79, 214, 255, .28)" }
+                        },
+                        {
+                            name: "人工客服",
+                            value: [78, 94, 92, 90, 88, 74],
+                            lineStyle: { color: ORANGE, width: 2 },
+                            itemStyle: { color: ORANGE },
+                            areaStyle: { color: "rgba(255, 180, 95, .2)" }
+                        }
+                    ]
+                }
+            ]
+        });
+    })();
+
+    /* ================================================================
+       8. 右中：各省响应时长 TOP8（横向条形）
+    ================================================================ */
+    (function () {
+        var chart = init("chartHBar");
+        var names = ["黑龙江", "新疆", "甘肃", "云南", "贵州", "吉林", "内蒙", "海南"];
+        var vals = [8.6, 7.9, 7.2, 6.8, 6.1, 5.7, 5.2, 4.8];
+
+        chart.setOption({
+            grid: { left: 6, right: 46, top: 10, bottom: 4, containLabel: true },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                backgroundColor: "rgba(8, 24, 46, .92)",
+                borderColor: "rgba(64, 158, 255, .5)",
+                textStyle: { color: "#cfe6ff", fontSize: 12 }
+            },
+            xAxis: { type: "value", show: false, max: 10 },
+            yAxis: {
+                type: "category",
+                inverse: true,
+                data: names,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: LABEL_COLOR, fontSize: 11.5 }
+            },
+            series: [
+                {
+                    type: "bar",
+                    barWidth: 10,
+                    showBackground: true,
+                    backgroundStyle: {
+                        color: "rgba(64, 158, 255, .06)",
+                        borderRadius: 5
+                    },
+                    itemStyle: {
+                        borderRadius: 5,
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: "rgba(255, 140, 95, .35)" },
+                            { offset: 1, color: "#ff8a5f" }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: "right",
+                        color: "#ffb08a",
+                        fontSize: 11.5,
+                        formatter: "{c}s"
+                    },
+                    data: vals
+                }
+            ]
+        });
+    })();
+
+    /* ================================================================
+       9. 右下：实时告警 + 仪表盘
+    ================================================================ */
+    (function () {
+        var chart = init("chartGauge");
+
+        chart.setOption({
+            series: [
+                {
+                    type: "gauge",
+                    center: ["50%", "62%"],
+                    radius: "92%",
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: 0,
+                    max: 100,
+                    progress: {
+                        show: true,
+                        width: 10,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: "#2f93c8" },
+                                { offset: 1, color: CYAN }
+                            ])
+                        }
+                    },
+                    pointer: { show: false },
+                    axisLine: {
+                        lineStyle: { width: 10, color: [[1, "rgba(64, 158, 255, .12)"]] }
+                    },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: { show: false },
+                    anchor: { show: false },
+                    title: {
+                        offsetCenter: [0, "32%"],
+                        color: LABEL_COLOR,
+                        fontSize: 11.5
+                    },
+                    detail: {
+                        offsetCenter: [0, "-2%"],
+                        fontSize: 24,
+                        fontFamily: "Consolas",
+                        color: CYAN,
+                        formatter: "{value}%"
+                    },
+                    data: [{ value: 87, name: "系统健康度" }]
+                }
+            ]
+        });
+
+        // 健康度缓慢波动
+        var health = 87;
+        setInterval(function () {
+            health = Math.max(72, Math.min(98, health + (Math.random() - 0.5) * 4));
+            chart.setOption({
+                series: [{ data: [{ value: Math.round(health), name: "系统健康度" }] }]
+            });
+        }, 2500);
+    })();
+
+    /* ================================================================
+       10. 告警滚动文字
+    ================================================================ */
+    (function () {
+        var box = document.getElementById("ticker");
+        var msgs = [
+            "【正常】华东节点集群 CPU 使用率 42%",
+            "【提示】12:08 华南地区瞬时并发上升 18%",
+            "【正常】知识库索引已完成增量更新",
+            "【告警】西南节点响应延迟 320ms，已自动扩容",
+            "【正常】大模型推理队列积压已清空"
+        ];
+        var idx = 0;
+        box.textContent = msgs[0];
+
+        setInterval(function () {
+            idx = (idx + 1) % msgs.length;
+            box.textContent = msgs[idx];
+            box.style.color = msgs[idx].indexOf("【告警】") === 0 ? "#ff9a8a" : "#6f95b5";
+        }, 3000);
+    })();
+
+    /* ================================================================
+       11. KPI 数字滚动
+    ================================================================ */
+    (function () {
+        function roll(el, target, unit, decimals) {
+            var start = 0;
+            var dur = 1400;
+            var t0 = performance.now();
+
+            function step(now) {
+                var p = Math.min(1, (now - t0) / dur);
+                // easeOutCubic
+                var e = 1 - Math.pow(1 - p, 3);
+                var v = start + (target - start) * e;
+                el.firstChild.nodeValue = decimals
+                    ? v.toFixed(decimals)
+                    : Math.round(v).toLocaleString();
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        var k1 = document.getElementById("kpi1");
+        var k2 = document.getElementById("kpi2");
+        var k3 = document.getElementById("kpi3");
+
+        roll(k1, 3862.4, "万", 1);
+        roll(k2, 12864, "单", 0);
+        roll(k3, 428, "人", 0);
+
+        // 今日成交额持续增长
+        setInterval(function () {
+            var base = parseFloat(k1.firstChild.nodeValue.replace(/,/g, "")) || 0;
+            var next = base + Math.random() * 18;
+            k1.firstChild.nodeValue = next.toFixed(1);
+        }, 4000);
+    })();
+
+    /* ================================================================
+       12. 顶部时钟
+    ================================================================ */
+    (function () {
+        var el = document.getElementById("clock");
+
+        function tick() {
+            var d = new Date();
+            function p2(n) { return n < 10 ? "0" + n : "" + n; }
+            el.innerHTML =
+                d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) +
+                " <span>" + p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds()) + "</span>";
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+
+    /* ================================================================
+       13. 所有图表随窗口变化自适应
+    ================================================================ */
+    window.addEventListener("resize", function () {
+        charts.forEach(function (c) { c.resize(); });
+    });
+</script>
+</body>
+</html>
